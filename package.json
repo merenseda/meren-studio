@@ -1,0 +1,46 @@
+{
+  "name": "meren-studio",
+  "version": "1.0.0",
+  "description": ".meren Dosya Formatı Görüntüleyici ve Düzenleyici",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/testEngine.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.meren.studio",
+    "productName": "MerenStudio",
+    "win": {
+      "target": "portable",
+      "fileAssociations": [
+        {
+          "ext": "meren",
+          "name": "Meren Şifreli Dokümanı",
+          "description": "Meren Studio Güvenli HTML Dokümanı",
+          "role": "Editor"
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "MerenStudio-Portable.exe"
+    },
+    "files": [
+      "src/**/*"
+    ]
+  },
+  "keywords": [
+    "meren",
+    "encryption",
+    "aes-256",
+    "html-viewer",
+    "editor"
+  ],
+  "author": "Meren",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^40.8.0",
+    "electron-builder": "^26.15.3"
+  }
+}

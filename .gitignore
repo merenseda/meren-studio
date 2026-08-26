@@ -1,0 +1,21 @@
+# Bağımlılıklar
+node_modules/
+package-lock.json
+
+# Derleme ve Paketleme Çıktıları
+dist/
+build/
+bin/
+obj/
+*.exe
+*.zip
+
+# Sistem & IDE Dosyaları
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Geçici Loglar
+*.log
+npm-debug.log*
