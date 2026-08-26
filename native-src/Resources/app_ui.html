@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meren Studio Native</title>
+  <style>
+    :root {
+      --bg-main: #0c1017;
+      --bg-surface: #141b24;
+      --bg-surface-elevated: #1b2432;
+      --bg-input: #090d13;
+      --border-color: #263345;
+      --border-focus: #4f7fff;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b9bb4;
+      --text-muted: #57677e;
+      --accent-primary: #6366f1;
+      --accent-secondary: #06b6d4;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --accent-glow: 0 0 16px rgba(99, 102, 241, 0.4);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; overflow: hidden; font-family: var(--font-ui); background-color: var(--bg-main); color: var(--text-primary); user-select: none; }
+    .app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+    
+    /* Header */
+    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); gap: 16px; z-index: 10; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .brand-badge { display: flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: 8px; }
+    .brand-icon { font-size: 1.1rem; }
+    .brand-text { font-size: 0.92rem; font-weight: 600; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .native-pill { font-size: 0.65rem; background: #10b981; color: #ffffff; padding: 2px 6px; border-radius: 10px; font-weight: 700; text-transform: uppercase; margin-left: 4px; }
+    
+    .doc-title-wrapper { display: flex; align-items: center; gap: 8px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; padding: 2px 8px; }
+    .doc-title-wrapper:focus-within { border-color: var(--border-focus); }
+    .doc-title-input { background: transparent; border: none; color: var(--text-primary); font-size: 0.88rem; font-weight: 500; outline: none; width: 160px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .status-dot.saved { background-color: var(--success); box-shadow: 0 0 6px var(--success); }
+    .status-dot.unsaved { background-color: var(--warning); box-shadow: 0 0 6px var(--warning); }
+    
+    /* Modes */
+    .mode-tabs { display: flex; background: var(--bg-input); padding: 3px; border-radius: 8px; border: 1px solid var(--border-color); gap: 2px; }
+    .tab-btn { display: flex; align-items: center; gap: 5px; background: transparent; border: none; color: var(--text-secondary); font-size: 0.8rem; font-weight: 500; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; }
+    .tab-btn:hover { color: var(--text-primary); background: var(--bg-surface-elevated); }
+    .tab-btn.active { background: var(--accent-primary); color: #ffffff; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35); }
+    
+    /* Actions */
+    .header-right { display: flex; align-items: center; gap: 6px; }
+    .action-btn { display: flex; align-items: center; gap: 5px; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.82rem; font-weight: 500; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; }
+    .action-btn:hover { background: #253347; border-color: #3e506d; }
+    .action-btn.primary { background: var(--accent-gradient); border: none; color: #ffffff; box-shadow: var(--accent-glow); }
+    .action-btn.primary:hover { filter: brightness(1.1); }
+    .action-btn.outline { border-color: var(--accent-secondary); color: var(--accent-secondary); }
+    
+    /* Quick Toolbar */
+    .quick-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 5px 16px; background: #0f1620; border-bottom: 1px solid var(--border-color); gap: 10px; overflow-x: auto; }
+    .toolbar-group { display: flex; align-items: center; gap: 5px; }
+    .toolbar-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-right: 4px; }
+    .tool-btn { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.78rem; padding: 3px 7px; border-radius: 4px; cursor: pointer; min-width: 26px; text-align: center; }
+    .tool-btn:hover { background: var(--bg-surface-elevated); border-color: var(--border-focus); }
+    .tool-divider { width: 1px; height: 16px; background: var(--border-color); margin: 0 3px; }
+    .chip-btn { background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc; font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
+    .chip-btn:hover { background: rgba(99, 102, 241, 0.25); border-color: #818cf8; color: #ffffff; }
+    
+    /* Main Workspace */
+    .main-workspace { flex: 1; display: flex; position: relative; overflow: hidden; background: var(--bg-main); }
+    
+    .main-workspace[data-view="split"] .editor-pane { display: flex; width: 50%; border-right: 1px solid var(--border-color); }
+    .main-workspace[data-view="split"] .preview-pane { display: flex; width: 50%; }
+    .main-workspace[data-view="split"] .visual-pane { display: none; }
+    
+    .main-workspace[data-view="visual"] .editor-pane, .main-workspace[data-view="visual"] .preview-pane { display: none; }
+    .main-workspace[data-view="visual"] .visual-pane { display: flex; width: 100%; }
+    
+    .main-workspace[data-view="preview"] .editor-pane, .main-workspace[data-view="preview"] .visual-pane { display: none; }
+    .main-workspace[data-view="preview"] .preview-pane { display: flex; width: 100%; }
+    
+    .main-workspace[data-view="code"] .visual-pane, .main-workspace[data-view="code"] .preview-pane { display: none; }
+    .main-workspace[data-view="code"] .editor-pane { display: flex; width: 100%; }
+    
+    /* Code Pane */
+    .editor-pane { flex-direction: column; background: #0d1219; height: 100%; }
+    .code-tab-bar { display: flex; align-items: center; background: #111722; border-bottom: 1px solid var(--border-color); padding: 0 8px; }
+    .code-tab { display: flex; align-items: center; gap: 5px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); font-size: 0.8rem; font-weight: 500; padding: 7px 12px; cursor: pointer; }
+    .code-tab:hover { color: var(--text-primary); }
+    .code-tab.active { color: #ffffff; border-bottom-color: var(--accent-primary); background: rgba(99, 102, 241, 0.08); }
+    .lang-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .lang-dot.html { background: #e34c26; }
+    .lang-dot.css { background: #264de4; }
+    .lang-dot.js { background: #f7df1e; }
+    .code-tab-fill { flex: 1; }
+    
+    .code-editors-container { flex: 1; position: relative; overflow: hidden; }
+    .code-editor-wrap { display: none; width: 100%; height: 100%; }
+    .code-editor-wrap.active { display: block; }
+    .code-editor-wrap textarea { width: 100%; height: 100%; background: #090d14; color: #f1f5f9; border: none; outline: none; padding: 14px; font-family: var(--font-mono); font-size: 0.88rem; line-height: 1.5; resize: none; tab-size: 2; }
+    
+    /* Visual WYSIWYG */
+    .visual-pane { flex-direction: column; align-items: center; padding: 20px; background: #0a0e14; overflow-y: auto; height: 100%; }
+    .visual-container { width: 100%; max-width: 860px; min-height: 100%; background: #ffffff; color: #1f2937; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); padding: 36px; user-select: text; }
+    .wysiwyg-content { outline: none; min-height: 500px; line-height: 1.7; font-size: 0.98rem; }
+    .wysiwyg-content h1 { font-size: 1.8rem; margin-bottom: 0.8rem; color: #111827; }
+    .wysiwyg-content h2 { font-size: 1.4rem; margin-top: 1rem; margin-bottom: 0.5rem; color: #1f2937; }
+    .wysiwyg-content p { margin-bottom: 1rem; }
+    
+    /* Preview Pane */
+    .preview-pane { flex-direction: column; background: #ffffff; height: 100%; }
+    .preview-header { display: flex; align-items: center; justify-content: space-between; padding: 5px 12px; background: #131923; border-bottom: 1px solid var(--border-color); }
+    .preview-indicator { display: flex; align-items: center; gap: 6px; }
+    .pulse-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+    .preview-title { font-size: 0.78rem; font-weight: 500; color: var(--text-secondary); }
+    .preview-frame-container { flex: 1; position: relative; background: #ffffff; }
+    .preview-frame-container iframe { width: 100%; height: 100%; border: none; }
+    
+    /* Status Bar */
+    .app-statusbar { display: flex; align-items: center; justify-content: space-between; padding: 4px 14px; background: #090d13; border-top: 1px solid var(--border-color); font-size: 0.72rem; color: var(--text-secondary); }
+    .statusbar-left, .statusbar-right { display: flex; align-items: center; gap: 14px; }
+    .status-badge.secure { display: flex; align-items: center; gap: 4px; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+    .ready-status { color: var(--success); font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand-badge">
+          <span class="brand-icon">💎</span>
+          <span class="brand-text">.meren <strong>Studio</strong></span>
+          <span class="native-pill">Native</span>
+        </div>
+        <div class="doc-title-wrapper">
+          <input type="text" id="docTitleInput" class="doc-title-input" value="Başlıksız Belge" title="Belge Başlığı">
+          <span id="saveStatusDot" class="status-dot saved" title="Kaydedildi"></span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="mode-tabs">
+          <button class="tab-btn active" data-mode="split">⚡ Bölünmüş</button>
+          <button class="tab-btn" data-mode="visual">✏️ Görsel</button>
+          <button class="tab-btn" data-mode="preview">👁️ Canlı</button>
+          <button class="tab-btn" data-mode="code">💻 Kod</button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button id="btnNew" class="action-btn"><span>➕</span> Yeni</button>
+        <button id="btnOpen" class="action-btn"><span>📂</span> Aç</button>
+        <button id="btnSave" class="action-btn primary"><span>💾</span> Kaydet</button>
+        <button id="btnSaveAs" class="action-btn"><span>📥</span> Farklı Kaydet</button>
+        <button id="btnExportHtml" class="action-btn outline"><span>🌐</span> HTML Export</button>
+      </div>
+    </header>
+
+    <div class="quick-toolbar">
+      <div class="toolbar-group">
+        <span class="toolbar-label">Biçimlendir:</span>
+        <button class="tool-btn" data-command="bold"><b>B</b></button>
+        <button class="tool-btn" data-command="italic"><i>I</i></button>
+        <button class="tool-btn" data-command="underline"><u>U</u></button>
+        <button class="tool-btn" data-command="strikeThrough"><s>S</s></button>
+        <div class="tool-divider"></div>
+        <button class="tool-btn" data-format="h1">H1</button>
+        <button class="tool-btn" data-format="h2">H2</button>
+        <button class="tool-btn" data-format="h3">H3</button>
+        <button class="tool-btn" data-format="p">P</button>
+        <div class="tool-divider"></div>
+        <button class="tool-btn" data-command="insertUnorderedList">• Liste</button>
+        <button class="tool-btn" data-command="insertOrderedList">1. Liste</button>
+      </div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">Bileşen Ekle:</span>
+        <button class="chip-btn" id="btnAddButtonWidget">⚡ Buton & Sayaç</button>
+        <button class="chip-btn" id="btnAddCardWidget">🎴 Animasyonlu Kart</button>
+        <button class="chip-btn" id="btnAddAlertWidget">💡 Bilgi Kutusu</button>
+        <button class="chip-btn" id="btnAddTableWidget">📊 Tablo</button>
+        <button class="chip-btn" id="btnAddCanvasWidget">🎨 Çizim Tuvali</button>
+      </div>
+    </div>
+
+    <main class="main-workspace" id="mainWorkspace" data-view="split">
+      <section class="editor-pane" id="editorPane">
+        <div class="code-tab-bar">
+          <button class="code-tab active" data-target="htmlEditorWrap"><span class="lang-dot html"></span> HTML</button>
+          <button class="code-tab" data-target="cssEditorWrap"><span class="lang-dot css"></span> CSS</button>
+          <button class="code-tab" data-target="jsEditorWrap"><span class="lang-dot js"></span> JavaScript</button>
+          <div class="code-tab-fill"></div>
+        </div>
+        <div class="code-editors-container">
+          <div class="code-editor-wrap active" id="htmlEditorWrap">
+            <textarea id="htmlEditor" placeholder="HTML..." spellcheck="false"></textarea>
+          </div>
+          <div class="code-editor-wrap" id="cssEditorWrap">
+            <textarea id="cssEditor" placeholder="CSS..." spellcheck="false"></textarea>
+          </div>
+          <div class="code-editor-wrap" id="jsEditorWrap">
+            <textarea id="jsEditor" placeholder="JavaScript..." spellcheck="false"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="visual-pane" id="visualPane">
+        <div class="visual-container">
+          <div class="wysiwyg-content" id="wysiwygEditor" contenteditable="true" spellcheck="false"></div>
+        </div>
+      </section>
+
+      <section class="preview-pane" id="previewPane">
+        <div class="preview-header">
+          <div class="preview-indicator">
+            <span class="pulse-dot"></span>
+            <span class="preview-title">Yerel Makine Motoru Canlı Çıktı</span>
+          </div>
+          <button class="tool-btn" id="btnRefreshPreview">🔄</button>
+        </div>
+        <div class="preview-frame-container">
+          <iframe id="previewFrame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin"></iframe>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-statusbar">
+      <div class="statusbar-left">
+        <span class="status-badge secure">🔒 AES-256-GCM (CPU AES-NI)</span>
+        <span class="status-item" id="filePathStatus">Yeni Belge</span>
+      </div>
+      <div class="statusbar-right">
+        <span class="status-item" id="fileSizeStatus">Boyut: ~0 B</span>
+        <span class="status-item" id="docStatsStatus">0 karakter</span>
+        <span class="status-item ready-status">● Native x86-64</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const DEFAULT_DOC = {
+      title: 'Meren Native Dokümanı',
+      html: '<div class="card"><h1>💎 Meren Native Studio</h1><p>Bu program doğrudan <strong>x86-64 Makine Diline</strong> derlenmiştir ve ek hiçbir klasöre ihtiyaç duymadan <strong>tek bir .exe</strong> olarak çalışır.</p><button id="btnClick" class="btn">İnteraktif Test</button><p id="out"></p></div>',
+      css: '.card { padding: 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-family: sans-serif; } h1 { color: #1e1b4b; } .btn { background: #6366f1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }',
+      js: 'document.getElementById("btnClick").addEventListener("click", () => { document.getElementById("out").innerHTML = "⚡ <strong>Tam performanslı JavaScript etkileşimi çalışıyor!</strong>"; });'
+    };
+
+    let currentDoc = JSON.parse(JSON.stringify(DEFAULT_DOC));
+    let isDirty = false;
+    let renderTimeout = null;
+
+    const docTitleInput = document.getElementById('docTitleInput');
+    const saveStatusDot = document.getElementById('saveStatusDot');
+    const mainWorkspace = document.getElementById('mainWorkspace');
+    const htmlEditor = document.getElementById('htmlEditor');
+    const cssEditor = document.getElementById('cssEditor');
+    const jsEditor = document.getElementById('jsEditor');
+    const wysiwygEditor = document.getElementById('wysiwygEditor');
+    const previewFrame = document.getElementById('previewFrame');
+    const filePathStatus = document.getElementById('filePathStatus');
+    const fileSizeStatus = document.getElementById('fileSizeStatus');
+    const docStatsStatus = document.getElementById('docStatsStatus');
+
+    function sendToNative(action, payload) {
+      if (window.chrome && window.chrome.webview) {
+        window.chrome.webview.postMessage({ action, payload });
+      }
+    }
+
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.addEventListener('message', event => {
+        const msg = event.data;
+        if (msg.type === 'loadedDoc') {
+          currentDoc = msg.document;
+          filePathStatus.textContent = msg.filePath || 'Yeni Belge';
+          fileSizeStatus.textContent = `Şifreli Boyut: ${(msg.fileSize / 1024).toFixed(2)} KB`;
+          loadDoc(currentDoc);
+        } else if (msg.type === 'saveSuccess') {
+          filePathStatus.textContent = msg.filePath;
+          fileSizeStatus.textContent = `Şifreli Boyut: ${(msg.fileSize / 1024).toFixed(2)} KB`;
+          setDirty(false);
+        } else if (msg.type === 'error') {
+          alert('Hata: ' + msg.message);
+        }
+      });
+    }
+
+    function loadDoc(doc) {
+      docTitleInput.value = doc.title || 'Başlıksız';
+      htmlEditor.value = doc.html || '';
+      cssEditor.value = doc.css || '';
+      jsEditor.value = doc.js || '';
+      wysiwygEditor.innerHTML = doc.html || '';
+      updateStats();
+      triggerRender();
+      setDirty(false);
+    }
+
+    function setDirty(dirty) {
+      isDirty = dirty;
+      saveStatusDot.className = isDirty ? 'status-dot unsaved' : 'status-dot saved';
+    }
+
+    function updateStats() {
+      const len = htmlEditor.value.length + cssEditor.value.length + jsEditor.value.length;
+      docStatsStatus.textContent = len.toLocaleString() + ' karakter';
+    }
+
+    function triggerRender() {
+      if (renderTimeout) clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => {
+        const full = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*,*::before,*::after{box-sizing:border-box;}body{font-family:sans-serif;margin:0;padding:20px;}${cssEditor.value}</style></head><body>${htmlEditor.value}<script>try{${jsEditor.value}}catch(e){console.error(e);}<\/script></body></html>`;
+        previewFrame.src = URL.createObjectURL(new Blob([full], { type: 'text/html;charset=utf-8' }));
+      }, 150);
+    }
+
+    // Input events
+    docTitleInput.addEventListener('input', () => { currentDoc.title = docTitleInput.value; setDirty(true); });
+    [htmlEditor, cssEditor, jsEditor].forEach(ed => {
+      ed.addEventListener('input', () => {
+        setDirty(true);
+        updateStats();
+        triggerRender();
+        if (ed === htmlEditor) wysiwygEditor.innerHTML = htmlEditor.value;
+      });
+      ed.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const s = ed.selectionStart, end = ed.selectionEnd;
+          ed.value = ed.value.substring(0, s) + '  ' + ed.value.substring(end);
+          ed.selectionStart = ed.selectionEnd = s + 2;
+          ed.dispatchEvent(new Event('input'));
+        }
+      });
+    });
+
+    wysiwygEditor.addEventListener('input', () => {
+      htmlEditor.value = wysiwygEditor.innerHTML;
+      setDirty(true);
+      updateStats();
+      triggerRender();
+    });
+
+    // View modes
+    document.querySelectorAll('.mode-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mainWorkspace.dataset.view = btn.dataset.mode;
+        if (btn.dataset.mode === 'visual') wysiwygEditor.innerHTML = htmlEditor.value;
+        else triggerRender();
+      });
+    });
+
+    // Code tabs
+    document.querySelectorAll('.code-tab-bar .code-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.code-tab-bar .code-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.code-editors-container .code-editor-wrap').forEach(w => w.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.target).classList.add('active');
+      });
+    });
+
+    // Toolbar formatting
+    document.querySelectorAll('.tool-btn[data-command], .tool-btn[data-format]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.command) document.execCommand(btn.dataset.command, false, null);
+        else if (btn.dataset.format) document.execCommand('formatBlock', false, btn.dataset.format);
+        wysiwygEditor.focus();
+        htmlEditor.value = wysiwygEditor.innerHTML;
+        triggerRender();
+        setDirty(true);
+      });
+    });
+
+    // Actions to Native
+    document.getElementById('btnNew').addEventListener('click', () => {
+      currentDoc = JSON.parse(JSON.stringify(DEFAULT_DOC));
+      filePathStatus.textContent = 'Yeni Belge';
+      fileSizeStatus.textContent = 'Boyut: ~0 B';
+      loadDoc(currentDoc);
+      sendToNative('newFile', {});
+    });
+
+    document.getElementById('btnOpen').addEventListener('click', () => sendToNative('openFile', {}));
+    
+    function collectCurrentDoc() {
+      currentDoc.title = docTitleInput.value.trim() || 'Başlıksız';
+      currentDoc.html = htmlEditor.value;
+      currentDoc.css = cssEditor.value;
+      currentDoc.js = jsEditor.value;
+      return currentDoc;
+    }
+
+    document.getElementById('btnSave').addEventListener('click', () => sendToNative('saveFile', collectCurrentDoc()));
+    document.getElementById('btnSaveAs').addEventListener('click', () => sendToNative('saveAsFile', collectCurrentDoc()));
+    document.getElementById('btnExportHtml').addEventListener('click', () => sendToNative('exportHtml', collectCurrentDoc()));
+    document.getElementById('btnRefreshPreview').addEventListener('click', triggerRender);
+
+    // Shortcuts
+    window.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (e.shiftKey) sendToNative('saveAsFile', collectCurrentDoc());
+        else sendToNative('saveFile', collectCurrentDoc());
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        sendToNative('openFile', {});
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        document.getElementById('btnNew').click();
+      }
+    });
+
+    // Inserters
+    function addSnippet(h, c, j) {
+      htmlEditor.value += '\n\n' + h;
+      if (c) cssEditor.value += '\n\n' + c;
+      if (j) jsEditor.value += '\n\n' + j;
+      wysiwygEditor.innerHTML = htmlEditor.value;
+      setDirty(true);
+      updateStats();
+      triggerRender();
+    }
+
+    document.getElementById('btnAddButtonWidget').addEventListener('click', () => {
+      const id = 'btn_' + Math.floor(Math.random() * 1000);
+      addSnippet(`<button id="${id}" class="btn">Sayaç: <span id="${id}_val">0</span></button>`, `.btn { background:#10b981; color:white; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; }`, `let c_${id}=0; document.getElementById('${id}').onclick=()=>{ c_${id}++; document.getElementById('${id}_val').textContent=c_${id}; };`);
+    });
+
+    document.getElementById('btnAddCardWidget').addEventListener('click', () => {
+      addSnippet(`<div class="card-box"><h3>🎴 Native Kart</h3><p>Bu kart doğrudan .meren dosyasında şifreli olarak saklanır.</p></div>`, `.card-box { background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:16px; margin:10px 0; }`, '');
+    });
+
+    document.getElementById('btnAddAlertWidget').addEventListener('click', () => {
+      addSnippet(`<div class="alert-info">💡 <strong>Bilgi:</strong> Bu içerik yalnızca Meren Studio ile açılabilir!</div>`, `.alert-info { background:#eff6ff; color:#1e40af; border-left:4px solid #3b82f6; padding:12px; border-radius:6px; margin:10px 0; }`, '');
+    });
+
+    document.getElementById('btnAddTableWidget').addEventListener('click', () => {
+      addSnippet(`<table class="table"><thead><tr><th>ID</th><th>Başlık</th></tr></thead><tbody><tr><td>1</td><td>Örnek Veri</td></tr></tbody></table>`, `.table { width:100%; border-collapse:collapse; } .table th, .table td { border:1px solid #e2e8f0; padding:8px; text-align:left; }`, '');
+    });
+
+    document.getElementById('btnAddCanvasWidget').addEventListener('click', () => {
+      const cid = 'c_' + Math.floor(Math.random() * 1000);
+      addSnippet(`<canvas id="${cid}" width="400" height="200" style="border:2px dashed #94a3b8; border-radius:8px;"></canvas>`, '', `const cv=document.getElementById('${cid}'), cx=cv.getContext('2d'); let p=false; cv.onmousedown=()=>p=true; window.onmouseup=()=>p=false; cv.onmousemove=(e)=>{ if(!p)return; const r=cv.getBoundingClientRect(); cx.lineWidth=3; cx.strokeStyle='#6366f1'; cx.lineTo(e.clientX-r.left, e.clientY-r.top); cx.stroke(); cx.beginPath(); cx.moveTo(e.clientX-r.left, e.clientY-r.top); };`);
+    });
+
+    // Start
+    loadDoc(currentDoc);
+    sendToNative('ready', {});
+  </script>
+</body>
+</html>
