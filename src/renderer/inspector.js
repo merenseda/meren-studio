@@ -1,4 +1,4 @@
-// Meren Studio - No-Code Görsel Stil ve Özellik Denetçisi (Inspector)
+// Meren Studio - No-Code Görsel Stil ve Özellik Denetçisi (Inspector - Tam Dinamik)
 
 class BlockInspector {
   constructor(containerEl, engine) {
@@ -49,7 +49,7 @@ class BlockInspector {
       <div class="inspector-body">
         <!-- 1. İÇERİK VE METİN AYARLARI -->
         <div class="inspector-section">
-          <div class="section-title">📝 İçerik & Metinler</div>
+          <div class="section-title">📝 İçerik & Veri Alanları</div>
           ${this.renderDataInputs(block)}
         </div>
 
@@ -79,7 +79,7 @@ class BlockInspector {
             <span class="preset-chip" data-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)" title="Koyu Gece"></span>
             <span class="preset-chip" data-color="#ffffff" title="Beyaz"></span>
             <span class="preset-chip" data-color="#f8fafc" title="Hafif Gri"></span>
-            <span class="preset-chip" data-color="rgba(255,255,255,0.75)" title="Buzlu Cam"></span>
+            <span class="preset-chip" data-color="rgba(255,255,255,0.85)" title="Buzlu Cam"></span>
           </div>
         </div>
 
@@ -120,17 +120,94 @@ class BlockInspector {
     this.bindEvents(block);
   }
 
-  // Dinamik Veri Alanları
+  // Dinamik Veri Alanları (Diziler ve Özel Kontroller Dahil)
   renderDataInputs(block) {
     const d = block.data || {};
     let inputsHtml = '';
 
+    // 1. Özel Bileşen Aksiyonları
+    if (block.componentId === 'vault-password-card') {
+      inputsHtml += `
+        <div style="margin-bottom: 12px;">
+          <button class="insp-full-btn" id="inspGenPassBtn">🎲 16 Haneli Güçlü Şifre Üret</button>
+        </div>
+      `;
+    }
+
+    // 2. Dizi Alanları (Todo items, Steps vb.)
+    if (Array.isArray(d.items)) {
+      inputsHtml += `
+        <div class="control-group">
+          <label>Görev Maddeleri (${d.items.length})</label>
+          <div class="insp-items-list">
+            ${d.items.map((it, idx) => `
+              <div class="insp-item-row">
+                <input type="checkbox" ${it.checked ? 'checked' : ''} data-insp-todo-chk="${idx}">
+                <input type="text" class="insp-input" value="${escapeHtml(it.text)}" data-insp-todo-text="${idx}">
+                <button class="insp-del-item-btn" data-insp-del-todo="${idx}">×</button>
+              </div>
+            `).join('')}
+          </div>
+          <button class="insp-add-sub-btn" id="inspAddTodoItem">➕ Yeni Madde Ekle</button>
+        </div>
+      `;
+    }
+
+    if (Array.isArray(d.steps)) {
+      inputsHtml += `
+        <div class="control-group">
+          <label>Talimat Adımları (${d.steps.length})</label>
+          <div class="insp-items-list">
+            ${d.steps.map((st, idx) => `
+              <div class="insp-item-row">
+                <span style="font-size: 0.75rem; color:#94a3b8;">${idx + 1}.</span>
+                <input type="text" class="insp-input" value="${escapeHtml(st.replace(/^\d+\.\s*/, ''))}" data-insp-step-text="${idx}">
+                <button class="insp-del-item-btn" data-insp-del-step="${idx}">×</button>
+              </div>
+            `).join('')}
+          </div>
+          <button class="insp-add-sub-btn" id="inspAddStepItem">➕ Yeni Adım Ekle</button>
+        </div>
+      `;
+    }
+
+    // 3. Standart String & Number Alanları
     for (const key in d) {
-      if (['bgColor', 'bgGradient', 'textColor', 'padding', 'margin', 'borderRadius', 'shadow', 'backdropBlur', 'borderWidth', 'borderColor'].includes(key)) {
+      if (['bgColor', 'bgGradient', 'textColor', 'padding', 'margin', 'borderRadius', 'shadow', 'backdropBlur', 'borderWidth', 'borderColor', 'items', 'steps', 'rows', 'headers'].includes(key)) {
         continue;
       }
 
-      if (typeof d[key] === 'string') {
+      if (key === 'bloodType') {
+        const bloods = ['A Rh (+)', '0 Rh (+)', 'B Rh (+)', 'AB Rh (+)', 'A Rh (-)', '0 Rh (-)', 'B Rh (-)'];
+        inputsHtml += `
+          <div class="control-group">
+            <label>Kan Grubu</label>
+            <select class="insp-input" data-data-key="bloodType">
+              ${bloods.map(b => `<option value="${b}" ${d.bloodType === b ? 'selected' : ''}>${b}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else if (key === 'mood') {
+        const moods = ['⛅ Düşünceli', '😊 Mutlu', '🔥 Enerjik', '🎯 Odaklanmış', '🌧️ Yorgun'];
+        inputsHtml += `
+          <div class="control-group">
+            <label>Ruh Hali / Etiket</label>
+            <select class="insp-input" data-data-key="mood">
+              ${moods.map(m => `<option value="${m}" ${d.mood === m ? 'selected' : ''}>${m}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else if (key === 'priority') {
+        const prios = ['⭐ Önemli', '🔥 Acil', '💡 Fikir'];
+        inputsHtml += `
+          <div class="control-group">
+            <label>Öncelik Seviyesi</label>
+            <select class="insp-input" data-data-key="priority">
+              ${prios.map(p => `<option value="${p}" ${d.priority === p ? 'selected' : ''}>${p}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else if (typeof d[key] === 'string') {
         const label = this.formatFieldLabel(key);
         if (d[key].length > 40) {
           inputsHtml += `
@@ -143,7 +220,7 @@ class BlockInspector {
           inputsHtml += `
             <div class="control-group">
               <label>${label}</label>
-              <input type="text" class="insp-input" data-data-key="${key}" value="${d[key]}">
+              <input type="text" class="insp-input" data-data-key="${key}" value="${escapeHtml(d[key])}">
             </div>
           `;
         }
@@ -164,31 +241,47 @@ class BlockInspector {
     const map = {
       title: 'Başlık',
       subtitle: 'Alt Başlık',
-      text: 'Açıklama Metni',
-      buttonText: 'Buton Yazısı',
-      label: 'Etiket',
-      question: 'Soru',
-      answer: 'Cevap',
-      metric: 'Büyük Değer / Metrik',
-      change: 'Değişim Oranı',
-      leftTitle: 'Sol Başlık',
-      leftText: 'Sol Metin',
-      rightTitle: 'Sağ Başlık',
-      rightText: 'Sağ Metin',
-      imageUrl: 'Görsel URL',
-      caption: 'Görsel Başlığı'
+      accountName: 'Hesap / Hizmet Adı',
+      username: 'Kullanıcı Adı / E-posta',
+      password: 'Şifre',
+      notes: 'Özel Notlar',
+      bankName: 'Banka / Kurum',
+      accountNumber: 'IBAN / Hesap No',
+      currency: 'Para Birimi',
+      branchOrType: 'Hesap Türü',
+      additionalAssets: 'Ek Varlık / Poliçe',
+      fullName: 'Ad Soyad',
+      allergies: 'Alerjiler',
+      chronicConditions: 'Kronik / İlaç',
+      emergencyContact: 'Acil İrtibat Tel',
+      hospital: 'Tercih Edilen Hastane',
+      date: 'Tarih',
+      body: 'Günlük Metni',
+      tag: 'Kategori Etiketi',
+      note: 'Gizli Not Metni',
+      description: 'Açıklama'
     };
     return map[key] || key;
   }
 
   // Olayları Bağla
   bindEvents(block) {
-    // Quick Actions
     const dupBtn = this.container.querySelector('#inspDupBtn');
     if (dupBtn) dupBtn.onclick = () => this.engine.duplicateBlock(block.id);
 
     const delBtn = this.container.querySelector('#inspDelBtn');
     if (delBtn) delBtn.onclick = () => this.engine.removeBlock(block.id);
+
+    // Rastgele Şifre Üretici
+    const genPassBtn = this.container.querySelector('#inspGenPassBtn');
+    if (genPassBtn) {
+      genPassBtn.onclick = () => {
+        const newPass = this.engine.generateStrongPassword(16);
+        block.data.password = newPass;
+        this.engine.emit('change', this.engine.blocks);
+        this.engine.showToast('🎲 16 Haneli Güçlü Şifre Üretildi!');
+      };
+    }
 
     // Dinamik Data Girişleri
     this.container.querySelectorAll('[data-data-key]').forEach(input => {
@@ -198,6 +291,76 @@ class BlockInspector {
         this.engine.updateBlockData(block.id, key, val);
       });
     });
+
+    // Todo Madde Yönetimi
+    this.container.querySelectorAll('[data-insp-todo-chk]').forEach(chk => {
+      chk.onchange = () => {
+        const idx = parseInt(chk.dataset.inspTodoChk);
+        if (block.data.items && block.data.items[idx]) {
+          block.data.items[idx].checked = chk.checked;
+          this.engine.emit('change', this.engine.blocks);
+        }
+      };
+    });
+
+    this.container.querySelectorAll('[data-insp-todo-text]').forEach(input => {
+      input.addEventListener('input', () => {
+        const idx = parseInt(input.dataset.inspTodoText);
+        if (block.data.items && block.data.items[idx]) {
+          block.data.items[idx].text = input.value;
+          this.engine.emit('change', this.engine.blocks);
+        }
+      });
+    });
+
+    this.container.querySelectorAll('[data-insp-del-todo]').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.inspDelTodo);
+        if (block.data.items) {
+          block.data.items.splice(idx, 1);
+          this.engine.emit('change', this.engine.blocks);
+        }
+      };
+    });
+
+    const addTodoBtn = this.container.querySelector('#inspAddTodoItem');
+    if (addTodoBtn) {
+      addTodoBtn.onclick = () => {
+        if (!block.data.items) block.data.items = [];
+        block.data.items.push({ text: 'Yeni görev maddesi...', checked: false });
+        this.engine.emit('change', this.engine.blocks);
+      };
+    }
+
+    // Step Yönetimi
+    this.container.querySelectorAll('[data-insp-step-text]').forEach(input => {
+      input.addEventListener('input', () => {
+        const idx = parseInt(input.dataset.inspStepText);
+        if (block.data.steps && block.data.steps[idx] !== undefined) {
+          block.data.steps[idx] = `${idx + 1}. ${input.value}`;
+          this.engine.emit('change', this.engine.blocks);
+        }
+      });
+    });
+
+    this.container.querySelectorAll('[data-insp-del-step]').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.inspDelStep);
+        if (block.data.steps) {
+          block.data.steps.splice(idx, 1);
+          this.engine.emit('change', this.engine.blocks);
+        }
+      };
+    });
+
+    const addStepBtn = this.container.querySelector('#inspAddStepItem');
+    if (addStepBtn) {
+      addStepBtn.onclick = () => {
+        if (!block.data.steps) block.data.steps = [];
+        block.data.steps.push(`${block.data.steps.length + 1}. Yeni talimat maddesi...`);
+        this.engine.emit('change', this.engine.blocks);
+      };
+    }
 
     // Renkler
     const textColorInput = this.container.querySelector('#inspTextColor');
@@ -265,6 +428,11 @@ class BlockInspector {
     if (color.startsWith('#')) return color;
     return '#6366f1';
   }
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 if (typeof module !== 'undefined' && module.exports) {
