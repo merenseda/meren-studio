@@ -3,33 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meren Studio - No-Code Görsel Web Tasarımcısı</title>
+  <title>Meren Studio - Kişisel Veri Kasası & Günlük</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app-container">
-    <!-- Üst Başlık & Eylem Çubuğu -->
+    
+    <!-- Üst Başlık & Araç Çubuğu -->
     <header class="app-header">
       <div class="header-left">
         <div class="brand-badge">
-          <span class="brand-icon">💎</span>
-          <span class="brand-text">Meren <strong>Studio</strong></span>
-          <span class="format-pill">No-Code</span>
+          <span class="brand-icon">🛡️</span>
+          <span class="brand-text">Meren <strong>Vault</strong></span>
+          <span class="format-pill">Şifreli</span>
         </div>
         <div class="doc-title-wrapper">
-          <input type="text" id="docTitleInput" class="doc-title-input" value="Başlıksız No-Code Dokümanı" title="Doküman Başlığı">
+          <input type="text" id="docTitleInput" class="doc-title-input" value="Kişisel Veri Kasası & Günlük" title="Doküman Başlığı">
           <span id="saveStatusDot" class="status-dot saved" title="Kaydedildi"></span>
         </div>
       </div>
 
-      <div class="header-center">
-        <button id="btnTogglePreview" class="mode-toggle-btn" title="Canlı Önizleme Modunu Aç/Kapat">
-          <span class="toggle-icon">👁️</span> <span id="previewBtnText">Önizleme Modu</span>
-        </button>
-      </div>
-
       <div class="header-right">
-        <button id="btnNew" class="action-btn" title="Yeni Doküman (Ctrl+N)">
+        <button id="btnNew" class="action-btn" title="Yeni Kasa / Günlük Aç (Ctrl+N)">
           <span>➕</span> Yeni
         </button>
         <button id="btnOpen" class="action-btn" title=".hrav Dosyası Aç (Ctrl+O)">
@@ -41,39 +36,52 @@
         <button id="btnSaveAs" class="action-btn" title="Farklı Kaydet">
           <span>📥</span> Farklı Kaydet
         </button>
-        <button id="btnExportHtml" class="action-btn outline" title="Standart HTML Olarak Dışa Aktar">
-          <span>🌐</span> HTML Export
+        <button id="btnPrintPdf" class="action-btn outline" title="Yazdır veya Güvenli PDF Olarak Kaydet">
+          <span>🖨️</span> Yazdır / PDF
         </button>
       </div>
     </header>
 
-    <!-- Ana 3 Panelli Çalışma Alanı -->
+    <!-- Microsoft Word Benzeri Korumalı Görünüm Güvenlik Şeridi -->
+    <div class="protected-view-banner" id="protectedViewBanner" style="display: none;">
+      <div class="banner-left-info">
+        <span class="banner-shield-icon">🛡️</span>
+        <div class="banner-text-block">
+          <strong>KORUMALI GÖRÜNÜM:</strong> Bu dosya kritik verilerinizi ve kişisel notlarınızı kaza eseri silinmeye veya değiştirilmeye karşı korumak için <u>salt okunur</u> açıldı.
+        </div>
+      </div>
+      <button class="enable-edit-btn" id="btnEnableEditing">
+        <span>✏️</span> Düzenlemeyi Etkinleştir
+      </button>
+    </div>
+
+    <!-- Ana 3 Panelli Stüdyo -->
     <main class="studio-workspace" id="studioWorkspace">
       
-      <!-- SOL PANEL: Zengin Bileşen Paleti -->
+      <!-- SOL: Kasa & Günlük Bileşen Paleti -->
       <aside class="sidebar-palette" id="sidebarPalette">
         <div class="palette-header">
-          <h3>Bileşen Kütüphanesi</h3>
-          <input type="text" id="componentSearch" class="palette-search-input" placeholder="Bileşen ara (Örn: Sayaç, Tablo)...">
+          <h3>Kasa & Günlük Menüsü</h3>
+          <input type="text" id="componentSearch" class="palette-search-input" placeholder="Bileşen ara (Şifre, Günlük, Sağlık)...">
         </div>
 
         <div class="palette-categories" id="paletteCategories">
-          <!-- Dinamik Olarak components.js ile Doldurulur -->
+          <!-- components.js ile doldurulur -->
         </div>
       </aside>
 
-      <!-- ORTA PANEL: Görsel Çalışma Tuvali (Canvas) -->
+      <!-- ORTA: Canlı Görsel Kasa Tuvali -->
       <section class="canvas-viewport" id="canvasViewport">
         <div class="canvas-page-wrapper">
           <div class="visual-canvas" id="visualCanvas">
-            <!-- Dinamik No-Code Blokları -->
+            <!-- Dinamik Kasa Blokları -->
           </div>
         </div>
       </section>
 
-      <!-- SAĞ PANEL: Görsel Stil & Özellik Denetçisi (Inspector) -->
+      <!-- SAĞ: Stil & Özellik Denetçisi -->
       <aside class="sidebar-inspector" id="sidebarInspector">
-        <!-- Dinamik Olarak inspector.js ile Doldurulur -->
+        <!-- inspector.js ile doldurulur -->
       </aside>
 
     </main>
@@ -82,19 +90,18 @@
     <footer class="app-statusbar">
       <div class="statusbar-left">
         <span class="status-badge secure">
-          <span>🔒</span> AES-256-GCM (.hrav Otomatik Şifreli)
+          <span>🔒</span> AES-256-GCM (.hrav Otomatik Şifreli Kasa)
         </span>
         <span class="status-item" id="filePathStatus">Yeni Belge (Henüz Kaydedilmedi)</span>
       </div>
       <div class="statusbar-right">
-        <span class="status-item" id="blockCountStatus">0 Bileşen</span>
-        <span class="status-item" id="fileSizeStatus">Boyut: ~0 B</span>
-        <span class="status-item ready-status">● Sistem Hazır</span>
+        <span class="status-item" id="blockCountStatus">0 Kayıt</span>
+        <span class="status-item" id="modeStatusBadge">Korumalı Mod</span>
+        <span class="status-item ready-status">● Sistem Güvenli</span>
       </div>
     </footer>
   </div>
 
-  <!-- JavaScript Modülleri -->
   <script src="components.js"></script>
   <script src="noCodeEngine.js"></script>
   <script src="inspector.js"></script>

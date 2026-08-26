@@ -1,51 +1,45 @@
-// Meren Studio - No-Code Studio Controller
+// Meren Studio - Kasa & Günlük Controller
 
 (function () {
   let engine = null;
   let inspector = null;
   let currentFilePath = null;
   let isDirty = false;
-  let isPreviewMode = false;
+  let isProtectedView = false;
 
   // DOM Elemanları
   const docTitleInput = document.getElementById('docTitleInput');
   const saveStatusDot = document.getElementById('saveStatusDot');
-  const studioWorkspace = document.getElementById('studioWorkspace');
+  const protectedViewBanner = document.getElementById('protectedViewBanner');
+  const btnEnableEditing = document.getElementById('btnEnableEditing');
   const paletteCategories = document.getElementById('paletteCategories');
   const visualCanvas = document.getElementById('visualCanvas');
   const sidebarInspector = document.getElementById('sidebarInspector');
   const componentSearch = document.getElementById('componentSearch');
-  const btnTogglePreview = document.getElementById('btnTogglePreview');
-  const previewBtnText = document.getElementById('previewBtnText');
 
   const filePathStatus = document.getElementById('filePathStatus');
   const blockCountStatus = document.getElementById('blockCountStatus');
-  const fileSizeStatus = document.getElementById('fileSizeStatus');
+  const modeStatusBadge = document.getElementById('modeStatusBadge');
 
   function init() {
-    // 1. Motor ve Denetçiyi Başlat
     engine = new NoCodeEngine();
     inspector = new BlockInspector(sidebarInspector, engine);
 
-    // 2. Sol Bileşen Galerisini Doldur
     renderComponentPalette();
-
-    // 3. Olayları Bağla
     setupEventListeners();
     setupShortcutKeys();
 
-    // 4. Tuval Değişikliklerini Dinle
     engine.on('change', (blocks) => {
-      engine.renderCanvas(visualCanvas, isPreviewMode);
+      engine.renderCanvas(visualCanvas, false);
       updateStats(blocks);
       setDirty(true);
     });
 
-    // 5. Varsayılan Başlangıç Dokümanını Yükle
+    // Varsayılan Yeni Kasa/Günlük Dokümanı (Düzenleme açık)
+    setProtectedViewMode(false);
     engine.loadFromDocument({});
     setDirty(false);
 
-    // 6. Dışarıdan veya Çift Tıklama ile Gelen .hrav Dosyaları
     if (window.merenAPI && window.merenAPI.onLoadFileFromPath) {
       window.merenAPI.onLoadFileFromPath(async (filePath) => {
         const res = await window.merenAPI.readFileByPath(filePath);
@@ -90,8 +84,11 @@
         `;
 
         itemEl.onclick = () => {
+          if (isProtectedView) {
+            alert('⚠️ Dosya şu anda Korumalı Görünümde. Yeni bileşen eklemek için lütfen önce üstteki "Düzenlemeyi Etkinleştir" butonuna basın.');
+            return;
+          }
           engine.addComponent(comp.id);
-          // Eklenen bileşene yumuşak kaydır
           setTimeout(() => {
             const selected = visualCanvas.querySelector('.canvas-block.selected');
             if (selected) selected.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -105,9 +102,24 @@
     }
   }
 
-  // İstatistik & Durum Güncelle
+  function setProtectedViewMode(protectedMode) {
+    isProtectedView = protectedMode;
+    engine.setReadOnly(isProtectedView);
+
+    if (isProtectedView) {
+      protectedViewBanner.style.display = 'flex';
+      modeStatusBadge.textContent = '🛡️ Korumalı Mod (Salt Okunur)';
+      modeStatusBadge.style.color = '#f59e0b';
+    } else {
+      protectedViewBanner.style.display = 'none';
+      modeStatusBadge.textContent = '✏️ Düzenleme Modu';
+      modeStatusBadge.style.color = '#10b981';
+    }
+    engine.renderCanvas(visualCanvas, false);
+  }
+
   function updateStats(blocks) {
-    blockCountStatus.textContent = `${blocks.length} Bileşen`;
+    blockCountStatus.textContent = `${blocks.length} Kayıt`;
   }
 
   function setDirty(dirty) {
@@ -116,52 +128,36 @@
     saveStatusDot.title = isDirty ? 'Değişiklikler kaydedilmedi' : 'Kaydedildi';
   }
 
-  // Olay Dinleyicileri
   function setupEventListeners() {
-    // Arama
     componentSearch.addEventListener('input', (e) => {
       renderComponentPalette(e.target.value);
     });
 
-    // Başlık
     docTitleInput.addEventListener('input', () => {
       setDirty(true);
     });
 
-    // Önizleme Toggle
-    btnTogglePreview.addEventListener('click', togglePreviewMode);
+    // Word benzeri Düzenlemeyi Etkinleştir Butonu
+    btnEnableEditing.addEventListener('click', () => {
+      setProtectedViewMode(false);
+    });
 
-    // Buton Eylemleri
+    // Butonlar
     document.getElementById('btnNew').addEventListener('click', handleNewFile);
     document.getElementById('btnOpen').addEventListener('click', handleOpenFile);
     document.getElementById('btnSave').addEventListener('click', handleSaveFile);
     document.getElementById('btnSaveAs').addEventListener('click', handleSaveAsFile);
-    document.getElementById('btnExportHtml').addEventListener('click', handleExportHtml);
+    document.getElementById('btnPrintPdf').addEventListener('click', handlePrintPdf);
   }
 
-  function togglePreviewMode() {
-    isPreviewMode = !isPreviewMode;
-    if (isPreviewMode) {
-      studioWorkspace.classList.add('preview-mode');
-      btnTogglePreview.classList.add('preview-active');
-      previewBtnText.textContent = 'Düzenlemeye Dön';
-    } else {
-      studioWorkspace.classList.remove('preview-mode');
-      btnTogglePreview.classList.remove('preview-active');
-      previewBtnText.textContent = 'Önizleme Modu';
-    }
-    engine.renderCanvas(visualCanvas, isPreviewMode);
-  }
-
-  // Dosya Eylemleri
   function handleNewFile() {
-    if (isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yeni bir doküman açmak istiyor musunuz?')) {
+    if (isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yeni bir kasa/günlük açmak istiyor musunuz?')) {
       return;
     }
     currentFilePath = null;
-    docTitleInput.value = 'Yeni No-Code Dokümanı';
+    docTitleInput.value = 'Kişisel Veri Kasası & Günlük';
     filePathStatus.textContent = 'Yeni Belge (Henüz Kaydedilmedi)';
-    fileSizeStatus.textContent = 'Boyut: ~0 B';
+    setProtectedViewMode(false);
     engine.loadFromDocument({});
     setDirty(false);
   }
@@ -182,8 +178,10 @@
   function handleFileLoaded(res) {
     currentFilePath = res.filePath;
     filePathStatus.textContent = res.filePath;
-    fileSizeStatus.textContent = `Şifreli Boyut: ${(res.fileSize / 1024).toFixed(2)} KB`;
-    docTitleInput.value = res.data.title || 'Başlıksız';
+    docTitleInput.value = res.data.title || 'Başlıksız Kasa';
+    
+    // Dosya açıldığında otomatik Korumalı Görünüme geç
+    setProtectedViewMode(true);
     engine.loadFromDocument(res.data);
     setDirty(false);
   }
@@ -191,7 +189,7 @@
   async function handleSaveFile() {
     if (!window.merenAPI) return;
 
-    const docData = engine.exportToDocument(docTitleInput.value.trim() || 'Başlıksız Doküman');
+    const docData = engine.exportToDocument(docTitleInput.value.trim() || 'Kişisel Veri Kasası');
 
     const res = await window.merenAPI.saveFile({
       filePath: currentFilePath,
@@ -201,7 +199,6 @@
     if (res && res.success) {
       currentFilePath = res.filePath;
       filePathStatus.textContent = res.filePath;
-      fileSizeStatus.textContent = `Şifreli Boyut: ${(res.fileSize / 1024).toFixed(2)} KB`;
       setDirty(false);
     } else if (res && res.error) {
       alert('Kaydetme hatası: ' + res.error);
@@ -211,35 +208,26 @@
   async function handleSaveAsFile() {
     if (!window.merenAPI) return;
 
-    const docData = engine.exportToDocument(docTitleInput.value.trim() || 'Başlıksız Doküman');
+    const docData = engine.exportToDocument(docTitleInput.value.trim() || 'Kişisel Veri Kasası');
 
     const res = await window.merenAPI.saveFile({
-      filePath: null, // Diyalog açar
+      filePath: null,
       documentData: docData
     });
 
     if (res && res.success) {
       currentFilePath = res.filePath;
       filePathStatus.textContent = res.filePath;
-      fileSizeStatus.textContent = `Şifreli Boyut: ${(res.fileSize / 1024).toFixed(2)} KB`;
       setDirty(false);
     } else if (res && res.error) {
       alert('Kaydetme hatası: ' + res.error);
     }
   }
 
-  async function handleExportHtml() {
-    if (!window.merenAPI) return;
-
-    const docData = engine.exportToDocument(docTitleInput.value.trim() || 'Başlıksız Doküman');
-
-    const res = await window.merenAPI.exportHtml(docData);
-    if (res && res.success) {
-      alert('Standart HTML başarıyla dışa aktarıldı: ' + res.filePath);
-    }
+  function handlePrintPdf() {
+    window.print();
   }
 
-  // Kısayollar
   function setupShortcutKeys() {
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
@@ -252,13 +240,18 @@
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault();
         handleNewFile();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        handlePrintPdf();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        if (isProtectedView) return;
         const sel = engine.getSelectedBlock();
         if (sel) {
           e.preventDefault();
           engine.duplicateBlock(sel.id);
         }
       } else if (e.key === 'Delete' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) && !document.activeElement.isContentEditable) {
+        if (isProtectedView) return;
         const sel = engine.getSelectedBlock();
         if (sel) {
           e.preventDefault();

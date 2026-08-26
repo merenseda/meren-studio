@@ -1,16 +1,16 @@
-// Meren Studio - No-Code Görsel Tuval Motoru
+// Meren Studio - No-Code Kasa ve Günlük Tuval Motoru
 
 class NoCodeEngine {
   constructor() {
     this.blocks = [];
     this.selectedBlockId = null;
+    this.isReadOnly = false;
     this.listeners = {
       change: [],
       select: []
     };
   }
 
-  // Olay Dinleyicileri
   on(event, callback) {
     if (this.listeners[event]) {
       this.listeners[event].push(callback);
@@ -23,8 +23,18 @@ class NoCodeEngine {
     }
   }
 
+  setReadOnly(readOnly) {
+    this.isReadOnly = readOnly;
+    if (this.isReadOnly) {
+      this.selectedBlockId = null;
+      this.emit('select', null);
+    }
+  }
+
   // Yeni Bileşen Ekle
   addComponent(componentId, atIndex = null) {
+    if (this.isReadOnly) return null;
+
     const compDef = COMPONENT_REGISTRY.find(c => c.id === componentId);
     if (!compDef) return null;
 
@@ -49,6 +59,7 @@ class NoCodeEngine {
 
   // Bileşen Sil
   removeBlock(blockId) {
+    if (this.isReadOnly) return;
     const idx = this.blocks.findIndex(b => b.id === blockId);
     if (idx !== -1) {
       this.blocks.splice(idx, 1);
@@ -60,8 +71,9 @@ class NoCodeEngine {
     }
   }
 
-  // Bileşeni Taşı (direction: -1 yukarı, 1 aşağı)
+  // Bileşeni Taşı
   moveBlock(blockId, direction) {
+    if (this.isReadOnly) return;
     const idx = this.blocks.findIndex(b => b.id === blockId);
     if (idx === -1) return;
 
@@ -73,8 +85,9 @@ class NoCodeEngine {
     this.emit('change', this.blocks);
   }
 
-  // Bileşeni Çoğalt (Duplicate)
+  // Bileşeni Çoğalt
   duplicateBlock(blockId) {
+    if (this.isReadOnly) return;
     const idx = this.blocks.findIndex(b => b.id === blockId);
     if (idx === -1) return;
 
@@ -94,6 +107,11 @@ class NoCodeEngine {
 
   // Bileşen Seçimi
   selectBlock(blockId) {
+    if (this.isReadOnly) {
+      this.selectedBlockId = null;
+      this.emit('select', null);
+      return;
+    }
     this.selectedBlockId = blockId;
     this.emit('select', this.getSelectedBlock());
   }
@@ -104,6 +122,7 @@ class NoCodeEngine {
 
   // Veri / Stil Güncelle
   updateBlockData(blockId, field, value) {
+    if (this.isReadOnly) return;
     const block = this.blocks.find(b => b.id === blockId);
     if (block) {
       block.data[field] = value;
@@ -112,6 +131,7 @@ class NoCodeEngine {
   }
 
   updateBlockStyle(blockId, styleProp, value) {
+    if (this.isReadOnly) return;
     const block = this.blocks.find(b => b.id === blockId);
     if (block) {
       if (!block.customStyles) block.customStyles = {};
@@ -120,28 +140,30 @@ class NoCodeEngine {
     }
   }
 
-  // Tuval HTML'ini Oluştur
+  // Tuval Render
   renderCanvas(containerEl, isPreviewMode = false) {
     containerEl.innerHTML = '';
 
     if (this.blocks.length === 0) {
       containerEl.innerHTML = `
         <div class="empty-canvas-state">
-          <div class="empty-icon">🎨</div>
-          <h3>Çalışma Tuvaliniz Boş</h3>
-          <p>Sol paneldeki zengin bileşenlere tıklayarak sayfanızı hemen tasarlamaya başlayın.</p>
+          <div class="empty-icon">🛡️</div>
+          <h3>Kişisel Kasanız ve Günlüğünüz Boş</h3>
+          <p>Sol paneldeki Kasa veya Günlük bileşenlerine tıklayarak bilgilerinizi güvenle eklemeye başlayın.</p>
         </div>
       `;
       return;
     }
 
+    const allowEditing = !isPreviewMode && !this.isReadOnly;
+
     this.blocks.forEach((block, index) => {
       const blockWrap = document.createElement('div');
-      blockWrap.className = 'canvas-block' + (block.id === this.selectedBlockId && !isPreviewMode ? ' selected' : '');
+      blockWrap.className = 'canvas-block' + (block.id === this.selectedBlockId && allowEditing ? ' selected' : '') + (this.isReadOnly ? ' read-only-mode' : '');
       blockWrap.dataset.blockId = block.id;
 
-      // Hızlı Kontrol Çubuğu (Yalnızca Düzenleme Modunda)
-      if (!isPreviewMode) {
+      // Hızlı Kontrol Çubuğu
+      if (allowEditing) {
         const toolbar = document.createElement('div');
         toolbar.className = 'block-floating-toolbar';
         toolbar.innerHTML = `
@@ -159,28 +181,28 @@ class NoCodeEngine {
         blockWrap.appendChild(toolbar);
       }
 
-      // İçerik Render
+      // İçerik Alanı
       const contentEl = document.createElement('div');
       contentEl.className = 'block-content-area';
       contentEl.innerHTML = this.generateBlockHtml(block);
 
       // Inline Metin Düzenleme Olayları
-      if (!isPreviewMode) {
+      if (allowEditing) {
         contentEl.querySelectorAll('[data-bind]').forEach(editable => {
           editable.contentEditable = 'true';
           editable.spellcheck = false;
-          editable.addEventListener('input', (e) => {
+          editable.addEventListener('input', () => {
             const field = editable.dataset.bind;
             block.data[field] = editable.innerText;
-            this.emit('select', block); // Inspector'ı güncelle
+            this.emit('select', block);
           });
         });
       }
 
       blockWrap.appendChild(contentEl);
 
-      // Tıklama ile Seçim
-      if (!isPreviewMode) {
+      // Seçim
+      if (allowEditing) {
         blockWrap.onclick = (e) => {
           e.stopPropagation();
           this.selectBlock(block.id);
@@ -190,13 +212,12 @@ class NoCodeEngine {
       containerEl.appendChild(blockWrap);
     });
 
-    // İnteraktif scriptleri başlat
     this.attachInteractiveBehaviors(containerEl);
   }
 
-  // Tekil Bileşen HTML Üretimi
+  // Bileşen HTML Üretimi
   generateBlockHtml(block) {
-    const d = block.data;
+    const d = block.data || {};
     const s = block.customStyles || {};
     const inlineStyle = `
       ${s.bgColor ? `background: ${s.bgColor};` : (d.bgGradient ? `background: ${d.bgGradient};` : (d.bgColor ? `background: ${d.bgColor};` : ''))}
@@ -205,112 +226,144 @@ class NoCodeEngine {
       ${s.margin ? `margin: ${s.margin};` : (d.margin ? `margin: ${d.margin};` : '')}
       ${s.borderRadius ? `border-radius: ${s.borderRadius};` : (d.borderRadius ? `border-radius: ${d.borderRadius};` : '')}
       ${s.shadow ? `box-shadow: ${s.shadow};` : (d.shadow ? `box-shadow: ${d.shadow};` : '')}
-      ${d.backdropBlur ? `backdrop-filter: blur(${d.backdropBlur}); -webkit-backdrop-filter: blur(${d.backdropBlur});` : ''}
-      ${d.borderWidth ? `border: ${d.borderWidth} solid ${d.borderColor || '#e2e8f0'};` : ''}
+      ${d.borderColor ? `border-left: 4px solid ${d.borderColor};` : ''}
     `;
 
     switch (block.componentId) {
-      case 'hero-section':
+      // 1. ŞİFRE VE HESAP KASASI
+      case 'vault-password-card':
         return `
-          <div class="nc-hero-card" style="${inlineStyle}">
-            <div class="nc-badge">🔒 .hrav Güvenli No-Code</div>
+          <div class="nc-vault-card" style="${inlineStyle}">
+            <div class="nc-vault-header-row">
+              <span class="nc-vault-icon">🔐</span>
+              <h3 class="nc-vault-title" data-bind="accountName">${d.accountName}</h3>
+            </div>
+            <div class="nc-vault-grid">
+              <div class="nc-field-group">
+                <span class="nc-field-label">Kullanıcı Adı / E-posta:</span>
+                <strong class="nc-field-value" data-bind="username">${d.username}</strong>
+              </div>
+              <div class="nc-field-group">
+                <span class="nc-field-label">Şifre:</span>
+                <div class="nc-password-mask-row">
+                  <span class="nc-masked-text" data-actual-pass="${escapeHtml(d.password)}">••••••••••••</span>
+                  <button class="nc-mask-toggle-btn" data-toggle-mask title="Şifreyi Göster/Gizle">👁️ Göster</button>
+                </div>
+              </div>
+            </div>
+            ${d.notes ? `<div class="nc-vault-notes"><small>📌 Not:</small> <span data-bind="notes">${d.notes}</span></div>` : ''}
+          </div>
+        `;
+
+      // 2. ACİL DURUM TALİMATLARI
+      case 'vault-emergency-instructions':
+        return `
+          <div class="nc-emergency-box" style="${inlineStyle}">
+            <h3 class="nc-emergency-title" data-bind="title">${d.title}</h3>
+            <div class="nc-steps-list">
+              <p class="nc-step-item" data-bind="step1">${d.step1}</p>
+              <p class="nc-step-item" data-bind="step2">${d.step2}</p>
+              <p class="nc-step-item" data-bind="step3">${d.step3}</p>
+            </div>
+          </div>
+        `;
+
+      // 3. FİNANS VE VARLIK KAYDI
+      case 'vault-financial-card':
+        return `
+          <div class="nc-financial-card" style="${inlineStyle}">
+            <div class="nc-financial-top">
+              <span class="nc-fin-icon">💳</span>
+              <h3 data-bind="bankName">${d.bankName}</h3>
+            </div>
+            <div class="nc-iban-box">
+              <span class="nc-iban-label">IBAN / Hesap No:</span>
+              <code class="nc-iban-code" data-bind="accountNumber">${d.accountNumber}</code>
+            </div>
+            <div class="nc-fin-details">
+              <div><small>Hesap Türü:</small> <span data-bind="branchOrType">${d.branchOrType}</span></div>
+              ${d.additionalAssets ? `<div style="margin-top: 4px;"><small>Ek Not / Poliçe:</small> <span data-bind="additionalAssets">${d.additionalAssets}</span></div>` : ''}
+            </div>
+          </div>
+        `;
+
+      // 4. SAĞLIK VE ACİL İRTİBAT
+      case 'vault-health-card':
+        return `
+          <div class="nc-health-card" style="${inlineStyle}">
+            <div class="nc-health-top">
+              <span class="nc-health-icon">🏥</span>
+              <div>
+                <h3 data-bind="fullName">${d.fullName}</h3>
+                <span class="nc-blood-badge">Kan Grubu: <strong data-bind="bloodType">${d.bloodType}</strong></span>
+              </div>
+            </div>
+            <div class="nc-health-grid">
+              <div><small>Alerjiler:</small> <p data-bind="allergies">${d.allergies}</p></div>
+              <div><small>Kronik / İlaç:</small> <p data-bind="chronicConditions">${d.chronicConditions}</p></div>
+            </div>
+            <div class="nc-emergency-contact-box">
+              🚨 <strong>Acil İrtibat:</strong> <span data-bind="emergencyContact">${d.emergencyContact}</span>
+            </div>
+          </div>
+        `;
+
+      // 5. TARİHLİ GÜNLÜK GİRDİSİ
+      case 'journal-entry-card':
+        return `
+          <div class="nc-journal-card" style="${inlineStyle}">
+            <div class="nc-journal-meta">
+              <span class="nc-journal-date">📅 <span data-bind="date">${d.date}</span></span>
+              <span class="nc-journal-mood" data-bind="mood">${d.mood}</span>
+            </div>
+            <h2 class="nc-journal-title" data-bind="title">${d.title}</h2>
+            <div class="nc-journal-body" data-bind="body">${d.body}</div>
+          </div>
+        `;
+
+      // 6. GİZLİ KİŞİSEL NOT
+      case 'secret-note-card':
+        return `
+          <div class="nc-secret-card" style="${inlineStyle}">
+            <div class="nc-secret-badge" data-bind="tag">${d.tag}</div>
+            <p class="nc-secret-note" data-bind="note">${d.note}</p>
+          </div>
+        `;
+
+      // 7. HIZLI FİKİR KAPSÜLÜ
+      case 'quick-idea-card':
+        return `
+          <div class="nc-idea-card" style="${inlineStyle}">
+            <h4 data-bind="title" style="margin-bottom: 6px;">${d.title}</h4>
+            <p data-bind="description" style="line-height: 1.5; font-size: 0.95rem;">${d.description}</p>
+          </div>
+        `;
+
+      // 8. KASA / GÜNLÜK ANA BAŞLIĞI
+      case 'hero-vault-header':
+        return `
+          <div class="nc-vault-hero" style="${inlineStyle}">
+            <div class="nc-shield-badge">🔒 AES-256 Şifreli Dijital Kasa</div>
             <h1 class="nc-hero-title" data-bind="title">${d.title}</h1>
             <p class="nc-hero-sub" data-bind="subtitle">${d.subtitle}</p>
-            <button class="nc-hero-btn">${d.buttonText}</button>
           </div>
         `;
 
-      case 'card-box':
-      case 'glass-card':
+      // 9. BUZLU CAM KART
+      case 'glass-vault-card':
         return `
-          <div class="nc-card-box" style="${inlineStyle}">
-            <h3 class="nc-card-title" data-bind="title">${d.title}</h3>
-            <p class="nc-card-text" data-bind="text">${d.text}</p>
+          <div class="nc-glass-card" style="${inlineStyle}; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4);">
+            <h3 data-bind="title" style="margin-bottom: 8px;">${d.title}</h3>
+            <p data-bind="text" style="line-height: 1.6;">${d.text}</p>
           </div>
         `;
 
-      case 'grid-2-col':
-        return `
-          <div class="nc-grid-2" style="${inlineStyle}">
-            <div class="nc-grid-col">
-              <h4 data-bind="leftTitle">${d.leftTitle}</h4>
-              <p data-bind="leftText">${d.leftText}</p>
-            </div>
-            <div class="nc-grid-col">
-              <h4 data-bind="rightTitle">${d.rightTitle}</h4>
-              <p data-bind="rightText">${d.rightText}</p>
-            </div>
-          </div>
-        `;
+      // 10. AYIRICI ÇİZGİ
+      case 'vault-divider':
+        return `<hr style="border: none; border-top: 1px solid ${d.lineColor || '#e2e8f0'}; margin: ${d.margin || '20px'} 0;">`;
 
-      case 'grid-3-col':
-        return `
-          <div class="nc-grid-3" style="${inlineStyle}">
-            <div class="nc-grid-col"><h4 data-bind="col1Title">${d.col1Title}</h4><p data-bind="col1Text">${d.col1Text}</p></div>
-            <div class="nc-grid-col"><h4 data-bind="col2Title">${d.col2Title}</h4><p data-bind="col2Text">${d.col2Text}</p></div>
-            <div class="nc-grid-col"><h4 data-bind="col3Title">${d.col3Title}</h4><p data-bind="col3Text">${d.col3Text}</p></div>
-          </div>
-        `;
-
-      case 'divider-line':
-        return `<hr style="border: none; border-top: ${d.lineWidth || '1px'} solid ${d.lineColor || '#cbd5e1'}; margin: ${d.margin || '24px'} 0;">`;
-
-      case 'heading-main':
-        return `<h1 style="${inlineStyle}; font-size: ${d.fontSize}; font-weight: ${d.fontWeight}; text-align: ${d.textAlign};" data-bind="text">${d.text}</h1>`;
-
-      case 'heading-sub':
-        return `<h2 style="${inlineStyle}; font-size: ${d.fontSize}; font-weight: ${d.fontWeight}; text-align: ${d.textAlign};" data-bind="text">${d.text}</h2>`;
-
-      case 'paragraph-text':
-        return `<p style="${inlineStyle}; font-size: ${d.fontSize}; line-height: ${d.lineHeight}; text-align: ${d.textAlign};" data-bind="text">${d.text}</p>`;
-
-      case 'callout-alert':
-        return `
-          <div class="nc-callout" style="${inlineStyle}; border-left: 4px solid ${d.borderColor};">
-            <strong data-bind="title">${d.title}</strong>
-            <p data-bind="text" style="margin-top: 4px;">${d.text}</p>
-          </div>
-        `;
-
-      case 'badge-tag':
-        return `<span class="nc-badge-chip" style="${inlineStyle}; display: inline-block;" data-bind="text">${d.text}</span>`;
-
-      case 'interactive-counter':
-        return `
-          <div class="nc-counter-widget" style="${inlineStyle}">
-            <span class="nc-counter-label" data-bind="label">${d.label}</span>
-            <div class="nc-counter-row">
-              <button class="nc-btn-count" style="background: ${d.btnColor}; color: white;" data-counter-btn>${d.btnText}</button>
-              <span class="nc-counter-value" data-counter-val>${d.initialCount || 0}</span>
-            </div>
-          </div>
-        `;
-
-      case 'accordion-faq':
-        return `
-          <div class="nc-accordion" style="${inlineStyle}">
-            <div class="nc-acc-header" data-acc-toggle>
-              <span data-bind="question">${d.question}</span>
-              <span class="nc-acc-arrow">▼</span>
-            </div>
-            <div class="nc-acc-body" data-bind="answer">${d.answer}</div>
-          </div>
-        `;
-
-      case 'progress-bar':
-        return `
-          <div class="nc-progress-widget" style="${inlineStyle}">
-            <div class="nc-progress-label-row">
-              <span data-bind="label">${d.label}</span>
-              <span><strong>${d.percent}%</strong></span>
-            </div>
-            <div class="nc-progress-track" style="background: ${d.trackColor}; height: ${d.height}; border-radius: ${d.borderRadius};">
-              <div class="nc-progress-fill" style="width: ${d.percent}%; background: ${d.barColor}; height: 100%; border-radius: ${d.borderRadius};"></div>
-            </div>
-          </div>
-        `;
-
-      case 'todo-checklist':
+      // 11. GÖREV / HEDEF LİSTESİ
+      case 'vault-todo-list':
         const itemsHtml = (d.items || []).map((it, idx) => `
           <label class="nc-todo-item ${it.checked ? 'completed' : ''}">
             <input type="checkbox" ${it.checked ? 'checked' : ''} data-todo-idx="${idx}">
@@ -324,70 +377,17 @@ class NoCodeEngine {
           </div>
         `;
 
-      case 'searchable-table':
+      // 12. KRİTİK BİLGİ TABLOSU
+      case 'vault-info-table':
         const ths = (d.headers || []).map(h => `<th>${h}</th>`).join('');
         const trs = (d.rows || []).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
         return `
           <div class="nc-table-widget" style="${inlineStyle}">
-            <div class="nc-table-header">
-              <h4 data-bind="title">${d.title}</h4>
-              <input type="text" class="nc-table-search" placeholder="Tabloda ara..." data-table-search>
-            </div>
+            <h4 data-bind="title" style="margin-bottom: 10px;">${d.title}</h4>
             <table class="nc-styled-table">
               <thead><tr>${ths}</tr></thead>
               <tbody>${trs}</tbody>
             </table>
-          </div>
-        `;
-
-      case 'drawing-canvas':
-        return `
-          <div class="nc-canvas-widget" style="${inlineStyle}">
-            <div class="nc-canvas-top">
-              <h4 data-bind="title">${d.title}</h4>
-              <button class="nc-mini-btn" data-clear-canvas>Temizle</button>
-            </div>
-            <canvas class="nc-drawing-canvas" height="${d.canvasHeight || 180}" style="width: 100%; border: 2px dashed #cbd5e1; border-radius: 8px; background: #ffffff; cursor: crosshair;"></canvas>
-          </div>
-        `;
-
-      case 'countdown-timer':
-        return `
-          <div class="nc-countdown-widget" style="${inlineStyle}">
-            <h4 data-bind="title">${d.title}</h4>
-            <div class="nc-countdown-digits">
-              <span class="digit-box" data-timer-min>${String(d.minutes || 15).padStart(2, '0')}</span>
-              <span class="digit-colon">:</span>
-              <span class="digit-box" data-timer-sec>${String(d.seconds || 0).padStart(2, '0')}</span>
-            </div>
-          </div>
-        `;
-
-      case 'image-card':
-        return `
-          <div class="nc-image-widget" style="${inlineStyle}">
-            <img src="${d.imageUrl}" alt="${d.caption || ''}" style="width: 100%; height: auto; border-radius: ${d.borderRadius || '8px'}; display: block;">
-            ${d.caption ? `<p class="nc-image-caption" data-bind="caption" style="margin-top: 8px; font-size: 0.85rem; color: #64748b; text-align: center;">${d.caption}</p>` : ''}
-          </div>
-        `;
-
-      case 'kpi-stat-card':
-        return `
-          <div class="nc-kpi-card" style="${inlineStyle}">
-            <div class="nc-kpi-metric" data-bind="metric">${d.metric}</div>
-            <div class="nc-kpi-label" data-bind="label">${d.label}</div>
-            <div class="nc-kpi-change ${d.isPositive ? 'positive' : 'negative'}" data-bind="change">${d.change}</div>
-          </div>
-        `;
-
-      case 'contact-form-widget':
-        return `
-          <div class="nc-form-widget" style="${inlineStyle}">
-            <h3 data-bind="title" style="margin-bottom: 16px;">${d.title}</h3>
-            <div class="nc-form-group"><input type="text" placeholder="Adınız Soyadınız" class="nc-form-input"></div>
-            <div class="nc-form-group"><input type="email" placeholder="E-posta Adresiniz" class="nc-form-input"></div>
-            <div class="nc-form-group"><textarea placeholder="Mesajınız..." class="nc-form-textarea" rows="3"></textarea></div>
-            <button class="nc-form-submit-btn">${d.buttonText}</button>
           </div>
         `;
 
@@ -396,84 +396,41 @@ class NoCodeEngine {
     }
   }
 
-  // Tuval İçi Canlı İnteraktif Davranışları Bağla
+  // İnteraktif Maskeleme ve Davranışlar
   attachInteractiveBehaviors(containerEl) {
-    // 1. Sayaç
-    containerEl.querySelectorAll('[data-counter-btn]').forEach(btn => {
+    // 1. Şifre Maskeleme / Göster - Gizle
+    containerEl.querySelectorAll('[data-toggle-mask]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
-        const valEl = btn.parentElement.querySelector('[data-counter-val]');
-        if (valEl) {
-          let count = parseInt(valEl.textContent, 10) || 0;
-          valEl.textContent = count + 1;
+        const maskRow = btn.closest('.nc-password-mask-row');
+        const textEl = maskRow ? maskRow.querySelector('.nc-masked-text') : null;
+        if (textEl) {
+          const isRevealed = textEl.dataset.revealed === 'true';
+          if (isRevealed) {
+            textEl.textContent = '••••••••••••';
+            textEl.dataset.revealed = 'false';
+            btn.textContent = '👁️ Göster';
+          } else {
+            textEl.textContent = textEl.dataset.actualPass;
+            textEl.dataset.revealed = 'true';
+            btn.textContent = '🙈 Gizle';
+          }
         }
       };
     });
 
-    // 2. Akordiyon
-    containerEl.querySelectorAll('[data-acc-toggle]').forEach(hdr => {
-      hdr.onclick = (e) => {
-        e.stopPropagation();
-        const body = hdr.nextElementSibling;
-        if (body) {
-          const isVisible = body.style.display === 'block';
-          body.style.display = isVisible ? 'none' : 'block';
-          const arrow = hdr.querySelector('.nc-acc-arrow');
-          if (arrow) arrow.textContent = isVisible ? '▼' : '▲';
+    // 2. Checklist İşaretleme
+    containerEl.querySelectorAll('.nc-todo-item input[type="checkbox"]').forEach(chk => {
+      chk.onchange = (e) => {
+        const itemWrap = chk.closest('.nc-todo-item');
+        if (itemWrap) {
+          itemWrap.classList.toggle('completed', chk.checked);
         }
       };
-    });
-
-    // 3. Tablo Arama
-    containerEl.querySelectorAll('[data-table-search]').forEach(input => {
-      input.oninput = () => {
-        const query = input.value.toLowerCase();
-        const table = input.closest('.nc-table-widget').querySelector('table');
-        if (table) {
-          table.querySelectorAll('tbody tr').forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
-          });
-        }
-      };
-    });
-
-    // 4. Çizim Tuvali
-    containerEl.querySelectorAll('.nc-drawing-canvas').forEach(canvas => {
-      const ctx = canvas.getContext('2d');
-      let isDrawing = false;
-
-      canvas.onmousedown = (e) => {
-        isDrawing = true;
-        ctx.beginPath();
-        const rect = canvas.getBoundingClientRect();
-        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-      };
-
-      window.addEventListener('mouseup', () => { isDrawing = false; });
-
-      canvas.onmousemove = (e) => {
-        if (!isDrawing) return;
-        const rect = canvas.getBoundingClientRect();
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#6366f1';
-        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-        ctx.stroke();
-      };
-
-      const clearBtn = canvas.parentElement.querySelector('[data-clear-canvas]');
-      if (clearBtn) {
-        clearBtn.onclick = (e) => {
-          e.stopPropagation();
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        };
-      }
     });
   }
 
-  // Standart Dokümana Paketle (.hrav Olarak Kaydetmek İçin)
-  exportToDocument(title = 'Meren No-Code Dokümanı') {
+  exportToDocument(title = 'Meren Kişisel Kasa & Günlük') {
     let combinedHtml = '';
     this.blocks.forEach(b => {
       combinedHtml += `<div class="meren-rendered-block" id="${b.id}">\n${this.generateBlockHtml(b)}\n</div>\n`;
@@ -482,30 +439,35 @@ class NoCodeEngine {
     return {
       version: '2.0',
       title: title,
-      blocks: this.blocks, // JSON No-Code Ağacı
+      blocks: this.blocks,
       html: combinedHtml,
       css: '',
       js: '',
-      metadata: { builder: 'MerenStudio-NoCode', timestamp: new Date().toISOString() }
+      metadata: { builder: 'MerenStudio-Vault', timestamp: new Date().toISOString() }
     };
   }
 
-  // Dokümandan Yükle
   loadFromDocument(doc) {
     if (doc.blocks && Array.isArray(doc.blocks) && doc.blocks.length > 0) {
       this.blocks = doc.blocks;
     } else {
-      // Varsayılan Başlangıç Şablonu
+      // Varsayılan Başlangıç Kasa Şablonu
       this.blocks = [];
-      this.addComponent('hero-section');
-      this.addComponent('grid-2-col');
-      this.addComponent('interactive-counter');
-      this.addComponent('todo-checklist');
+      this.addComponent('hero-vault-header');
+      this.addComponent('vault-emergency-instructions');
+      this.addComponent('vault-password-card');
+      this.addComponent('journal-entry-card');
+      this.addComponent('vault-health-card');
     }
     this.selectedBlockId = this.blocks.length > 0 ? this.blocks[0].id : null;
     this.emit('change', this.blocks);
     this.emit('select', this.getSelectedBlock());
   }
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 if (typeof module !== 'undefined' && module.exports) {

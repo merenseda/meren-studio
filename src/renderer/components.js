@@ -1,256 +1,193 @@
-// Meren Studio - Zengin No-Code Bileşen Kütüphanesi
+// Meren Studio - Acil Durum Kasası & Şifreli Günlük Bileşen Kütüphanesi
 
 const COMPONENT_CATEGORIES = {
-  layout: { name: 'Düzen & Konteyner', icon: '📂' },
-  typography: { name: 'Tipografi & Metin', icon: '📝' },
-  interactive: { name: 'İnteraktif Araçlar', icon: '⚡' },
-  media: { name: 'Medya & Form', icon: '🖼️' }
+  vault: { name: 'Acil Durum & Kasa', icon: '🛡️' },
+  journal: { name: 'Günlük & Kişisel Not', icon: '📖' },
+  layout: { name: 'Düzen & Kartlar', icon: '🎴' },
+  tools: { name: 'Güvenli Araçlar', icon: '⚡' }
 };
 
 const COMPONENT_REGISTRY = [
-  // --- 1. DÜZEN VE KONTEYNERLAR ---
+  // --- 1. ACİL DURUM VE KASA BİLEŞENLERİ ---
   {
-    id: 'hero-section',
-    name: 'Hero Başlık Alanı',
+    id: 'vault-password-card',
+    name: 'Şifre & Hesap Kasası',
+    category: 'vault',
+    icon: '🔐',
+    description: 'Maskeli şifre ve kullanıcı adı kartı',
+    defaultData: {
+      accountName: 'Ana E-posta / Banka Hesabı',
+      username: 'kullanici@ornek.com',
+      password: 'CokGucluSifre2026!*',
+      notes: 'İki faktörlü doğrulama (2FA) kurtarma kodları evdeki kasadadır.',
+      bgColor: '#ffffff',
+      padding: '24px',
+      borderRadius: '12px',
+      shadow: '0 4px 6px -1px rgba(0,0,0,0.06)'
+    }
+  },
+  {
+    id: 'vault-emergency-instructions',
+    name: 'Acil Durum Talimatları',
+    category: 'vault',
+    icon: '📜',
+    description: '"Bana bir şey olursa..." rehber ve yönergesi',
+    defaultData: {
+      title: '⚠️ Acil Durum ve Aile Bilgilendirme Notu',
+      step1: '1. Bu dosyada yer alan finansal bilgileri aile avukatı ile paylaşın.',
+      step2: '2. Evdeki fiziksel evrak kutusunun anahtarı çalışma masasının üst çekmecesindedir.',
+      step3: '3. Banka ve sigorta işlemlerini aşağıdaki irtibat numaralarından başlatın.',
+      bgColor: '#fffbeb',
+      borderColor: '#f59e0b',
+      textColor: '#92400e',
+      padding: '24px',
+      borderRadius: '12px'
+    }
+  },
+  {
+    id: 'vault-financial-card',
+    name: 'Finans & Varlık Kaydı',
+    category: 'vault',
+    icon: '💳',
+    description: 'Banka, IBAN, poliçe ve mülk özetleri',
+    defaultData: {
+      bankName: 'Ana Banka Hesabı & Varlıklar',
+      accountNumber: 'TR12 0006 1000 0000 1234 5678 90',
+      branchOrType: 'Maaş / Yatırım Hesabı',
+      additionalAssets: 'Hayat sigortası poliçe no: 987654321',
+      bgColor: '#ffffff',
+      padding: '20px',
+      borderRadius: '12px'
+    }
+  },
+  {
+    id: 'vault-health-card',
+    name: 'Sağlık & Acil İrtibat Kartı',
+    category: 'vault',
+    icon: '🏥',
+    description: 'Kan grubu, kronik bilgiler ve acil aranacaklar',
+    defaultData: {
+      fullName: 'Meren',
+      bloodType: 'A Rh (+)',
+      allergies: 'Bilinen alerji yok',
+      chronicConditions: 'Düzenli tansiyon ilacı (sabahları 1 doz)',
+      emergencyContact: 'Birinci Derece Yakın: 0555 123 45 67',
+      bgColor: '#fef2f2',
+      borderColor: '#ef4444',
+      textColor: '#991b1b',
+      padding: '20px',
+      borderRadius: '12px'
+    }
+  },
+
+  // --- 2. GÜNLÜK VE KİŞİSEL NOTLAR ---
+  {
+    id: 'journal-entry-card',
+    name: 'Tarihli Günlük Girdisi',
+    category: 'journal',
+    icon: '📖',
+    description: 'Tarih ve etiketli kişisel günlük sayfası',
+    defaultData: {
+      date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }),
+      mood: '⛅ Düşünceli / Odaklanmış',
+      title: 'Günün Notları & Düşünceler',
+      body: 'Bugün aldığım önemli kararlar ve aklımdaki fikirler... Bu içerik AES-256 ile şifrelendiği için sadece ben açabilirim.',
+      bgColor: '#ffffff',
+      textColor: '#1e293b',
+      padding: '28px',
+      borderRadius: '14px',
+      shadow: '0 8px 20px -4px rgba(0,0,0,0.06)'
+    }
+  },
+  {
+    id: 'secret-note-card',
+    name: 'Gizli Kişisel Not & Düşünce',
+    category: 'journal',
+    icon: '💭',
+    description: 'Özel düşünceler, anılar ve hedefler',
+    defaultData: {
+      tag: '🔒 Gizli Düşünce',
+      note: 'Gelecekte hatırlamak istediğim kişisel manifesto ve kararlarım buraya not edilmiştir.',
+      bgColor: '#f8fafc',
+      textColor: '#334155',
+      padding: '22px',
+      borderRadius: '12px'
+    }
+  },
+  {
+    id: 'quick-idea-card',
+    name: 'Hızlı Fikir Kapsülü',
+    category: 'journal',
+    icon: '💡',
+    description: 'Anlık aklınıza gelen fikir ve notlar',
+    defaultData: {
+      title: '💡 Harika Bir Proje Fikri',
+      description: 'Zaman kaybetmeden uygulamak istediğim yeni konsept ve detaylar.',
+      bgColor: '#ede9fe',
+      textColor: '#5b21b6',
+      padding: '20px',
+      borderRadius: '12px'
+    }
+  },
+
+  // --- 3. DÜZEN VE KARTLAR ---
+  {
+    id: 'hero-vault-header',
+    name: 'Kasa / Günlük Ana Başlığı',
     category: 'layout',
     icon: '🌟',
-    description: 'Etkileyici karşılama ve vurgu alanı',
+    description: 'Dokümanın şık karşılama başlığı',
     defaultData: {
-      title: 'Harika Bir Fikirle Başlayın',
-      subtitle: 'Bu sayfa Meren Studio No-Code görsel stüdyosu ile tasarlandı ve .hrav formatında şifrelendi.',
-      buttonText: 'Hemen Keşfet',
+      title: '💎 Kişisel Kasa & Günlük',
+      subtitle: 'Bu dokümandaki tüm bilgiler AES-256-GCM ile güvenle şifrelenmiştir.',
       bgGradient: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
       textColor: '#ffffff',
-      padding: '40px',
+      padding: '36px',
       borderRadius: '16px',
       shadow: '0 10px 25px -5px rgba(49, 46, 129, 0.3)'
     }
   },
   {
-    id: 'card-box',
-    name: 'Modern Kart Kutusu',
-    category: 'layout',
-    icon: '🎴',
-    description: 'İçeriklerinizi toplayan şık kart',
-    defaultData: {
-      title: 'Özellik Başlığı',
-      text: 'Bileşeninizi görsel stil panelinden dilediğiniz gibi özelleştirebilirsiniz.',
-      bgColor: '#ffffff',
-      textColor: '#1e293b',
-      padding: '24px',
-      borderRadius: '12px',
-      shadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-      borderWidth: '1px',
-      borderColor: '#e2e8f0'
-    }
-  },
-  {
-    id: 'glass-card',
-    name: 'Buzlu Cam (Glass) Kart',
+    id: 'glass-vault-card',
+    name: 'Buzlu Cam Kart',
     category: 'layout',
     icon: '🧊',
-    description: 'Şeffaf parıltılı modern cam efekti',
+    description: 'Saydam ve estetik not kutusu',
     defaultData: {
-      title: 'Buzlu Cam Efekti',
-      text: 'Modern arayüzler için ultra şık saydam arka planlı kart.',
-      bgColor: 'rgba(255, 255, 255, 0.75)',
+      title: 'Önemli Hatırlatma',
+      text: 'Kritik evrakların fiziksel kopyaları çalışma odasındaki kilitli dolaptadır.',
+      bgColor: 'rgba(255, 255, 255, 0.85)',
       textColor: '#0f172a',
-      padding: '28px',
-      borderRadius: '16px',
-      shadow: '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
-      borderWidth: '1px',
-      borderColor: 'rgba(255, 255, 255, 0.4)',
-      backdropBlur: '12px'
+      padding: '24px',
+      borderRadius: '14px',
+      shadow: '0 8px 32px 0 rgba(31, 38, 135, 0.08)'
     }
   },
   {
-    id: 'grid-2-col',
-    name: '2 Sütunlu Yan Yana Düzen',
-    category: 'layout',
-    icon: '▥',
-    description: 'İki içeriği eşit sütunlara böler',
-    defaultData: {
-      leftTitle: 'Sol Sütun Başlığı',
-      leftText: 'Sol sütun içeriğini buraya yazabilirsiniz.',
-      rightTitle: 'Sağ Sütun Başlığı',
-      rightText: 'Sağ sütun içeriğini buraya yazabilirsiniz.',
-      bgColor: '#f8fafc',
-      padding: '20px',
-      borderRadius: '12px',
-      gap: '16px'
-    }
-  },
-  {
-    id: 'grid-3-col',
-    name: '3 Sütunlu Kart Dizilimi',
-    category: 'layout',
-    icon: '▤',
-    description: 'Üçlü özellik veya istatistik dizilimi',
-    defaultData: {
-      col1Title: 'Özellik 1',
-      col1Text: 'Hızlı ve kolay no-code düzenleme.',
-      col2Title: 'Özellik 2',
-      col2Text: 'Otomatik AES-256 şifreleme.',
-      col3Title: 'Özellik 3',
-      col3Text: 'Tek tıkla bağımsız dağıtım.',
-      bgColor: '#ffffff',
-      padding: '20px',
-      borderRadius: '12px',
-      gap: '14px'
-    }
-  },
-  {
-    id: 'divider-line',
-    name: 'Şık Bölücü Çizgi',
+    id: 'vault-divider',
+    name: 'Ayırıcı Çizgi',
     category: 'layout',
     icon: '➖',
-    description: 'Bölümler arasına estetik çizgi ekler',
+    description: 'Bölümleri estetik şekilde ayırır',
     defaultData: {
-      lineColor: '#cbd5e1',
-      lineWidth: '1px',
-      margin: '24px'
+      lineColor: '#e2e8f0',
+      margin: '20px'
     }
   },
 
-  // --- 2. TİPOGRAFİ VE METİN ---
+  // --- 4. GÜVENLİ ARAÇLAR ---
   {
-    id: 'heading-main',
-    name: 'Büyük Başlık (H1)',
-    category: 'typography',
-    icon: '🏷️',
-    description: 'Ana sayfa ve bölüm başlığı',
-    defaultData: {
-      text: 'Meren Studio ile Tasarlandı',
-      fontSize: '32px',
-      fontWeight: '700',
-      textColor: '#0f172a',
-      textAlign: 'left',
-      margin: '12px'
-    }
-  },
-  {
-    id: 'heading-sub',
-    name: 'Orta Başlık (H2 / H3)',
-    category: 'typography',
-    icon: '🔖',
-    description: 'Alt başlıklar ve grup isimleri',
-    defaultData: {
-      text: 'Görsel Tasarım & Güvenlik',
-      fontSize: '22px',
-      fontWeight: '600',
-      textColor: '#334155',
-      textAlign: 'left',
-      margin: '10px'
-    }
-  },
-  {
-    id: 'paragraph-text',
-    name: 'Zengin Paragraf Metni',
-    category: 'typography',
-    icon: '📄',
-    description: 'Açıklama ve gövde metinleri',
-    defaultData: {
-      text: 'Bu paragraf metnini doğrudan tıklayarak düzenleyebilir, sağ panelden yazı boyutunu, rengini ve aralıklarını kolayca değiştirebilirsiniz.',
-      fontSize: '16px',
-      textColor: '#475569',
-      lineHeight: '1.7',
-      textAlign: 'left',
-      margin: '8px'
-    }
-  },
-  {
-    id: 'callout-alert',
-    name: 'Vurgulu Bilgi Kutusu',
-    category: 'typography',
-    icon: '💡',
-    description: 'Önemli duyuru veya ipucu kutusu',
-    defaultData: {
-      type: 'info', // info, success, warning, danger
-      title: 'Önemli İpucu',
-      text: 'Bu doküman .hrav formatı ile donanımsal AES-256 ile korunmaktadır.',
-      bgColor: '#eff6ff',
-      borderColor: '#3b82f6',
-      textColor: '#1e40af',
-      padding: '16px',
-      borderRadius: '8px'
-    }
-  },
-  {
-    id: 'badge-tag',
-    name: 'Durum Etiketi (Badge)',
-    category: 'typography',
-    icon: '🏷️',
-    description: 'Küçük vurgulayıcı hap etiket',
-    defaultData: {
-      text: '✨ Yeni Özellik',
-      bgColor: '#ede9fe',
-      textColor: '#6d28d9',
-      fontSize: '13px',
-      padding: '4px 12px',
-      borderRadius: '20px'
-    }
-  },
-
-  // --- 3. İNTERAKTİF ARAÇLAR ---
-  {
-    id: 'interactive-counter',
-    name: 'Canlı Sayaç Butonu',
-    category: 'interactive',
-    icon: '⚡',
-    description: 'Tıklandıkça artan dinamik sayaç',
-    defaultData: {
-      label: 'Tıkla ve Say:',
-      initialCount: 0,
-      btnText: '+ Artır',
-      btnColor: '#6366f1',
-      bgColor: '#f8fafc',
-      padding: '20px',
-      borderRadius: '12px'
-    }
-  },
-  {
-    id: 'accordion-faq',
-    name: 'Açılır SSS Akordiyonu',
-    category: 'interactive',
-    icon: '📂',
-    description: 'Tıklanınca genişleyen soru-cevap kutusu',
-    defaultData: {
-      question: '.hrav dosya formatı nedir?',
-      answer: '.hrav, Meren Studio tarafından oluşturulan ve AES-256-GCM ile otomatik şifrelenen özel güvenli doküman uzantısıdır.',
-      bgColor: '#ffffff',
-      headerBg: '#f1f5f9',
-      textColor: '#1e293b',
-      borderRadius: '8px'
-    }
-  },
-  {
-    id: 'progress-bar',
-    name: 'İlerleme Çubuğu',
-    category: 'interactive',
-    icon: '📈',
-    description: 'Yüzde oranını gösteren animasyonlu bar',
-    defaultData: {
-      label: 'Proje Tamamlanma Oranı',
-      percent: 75,
-      barColor: 'linear-gradient(90deg, #6366f1, #10b981)',
-      trackColor: '#e2e8f0',
-      textColor: '#334155',
-      height: '14px',
-      borderRadius: '8px'
-    }
-  },
-  {
-    id: 'todo-checklist',
-    name: 'İnteraktif Görev Listesi',
-    category: 'interactive',
+    id: 'vault-todo-list',
+    name: 'Acil Durum & Hedef Kontrol Listesi',
+    category: 'tools',
     icon: '✅',
-    description: 'İşaretlenebilir canlı yapılacaklar listesi',
+    description: 'İşaretlenebilir canlı görev listesi',
     defaultData: {
-      title: 'Bugünün Görevleri',
+      title: 'Yapılacaklar & Kontrol Listesi',
       items: [
-        { text: 'Görsel tasarımı tamamla', checked: true },
-        { text: 'İnteraktif bileşenleri test et', checked: false },
-        { text: '.hrav olarak şifreli kaydet', checked: false }
+        { text: 'Yıllık banka şifrelerini ve kurtarma kodlarını güncelle', checked: true },
+        { text: 'Fiziksel evrakların yedeklerini kontrol et', checked: false },
+        { text: 'Güvenli dijital kasayı .hrav olarak kaydet', checked: false }
       ],
       bgColor: '#ffffff',
       padding: '20px',
@@ -258,99 +195,22 @@ const COMPONENT_REGISTRY = [
     }
   },
   {
-    id: 'searchable-table',
-    name: 'Dinamik Veri Tablosu',
-    category: 'interactive',
+    id: 'vault-info-table',
+    name: 'Kritik Bilgi Tablosu',
+    category: 'tools',
     icon: '📊',
-    description: 'İçinde anlık arama yapılabilen tablo',
+    description: 'Kategorize edilmiş veri tablosu',
     defaultData: {
-      title: 'Kullanıcı & Veri Tablosu',
-      headers: ['Ad / Başlık', 'Kategori', 'Durum'],
+      title: 'Kurum ve Hesap Bilgileri',
+      headers: ['Kurum / Hizmet', 'Kullanıcı / No', 'Detay'],
       rows: [
-        ['Meren Studio', 'Uygulama', 'Aktif'],
-        ['Hrav Formatı', 'Şifreleme', 'Güvenli'],
-        ['No-Code Engine', 'Tasarım', 'Hazır']
+        ['E-Devlet', 'TC Kimlik', '2FA SMS ile bağlı'],
+        ['Kripto Donanım Cüzdanı', 'Ledger Nano', 'Kurtarma kelimeleri kasada'],
+        ['Bireysel Emeklilik (BES)', 'Poliçe No: 441029', 'Vefat tazminatı mevcut']
       ],
       bgColor: '#ffffff',
-      headerBg: '#f8fafc',
       padding: '16px',
       borderRadius: '10px'
-    }
-  },
-  {
-    id: 'drawing-canvas',
-    name: 'HTML5 Çizim Tuvali',
-    category: 'interactive',
-    icon: '🎨',
-    description: 'Kullanıcının fareyle çizim yapabileceği alan',
-    defaultData: {
-      title: 'İmza & Çizim Alanı',
-      strokeColor: '#6366f1',
-      bgColor: '#ffffff',
-      canvasHeight: 180,
-      borderRadius: '8px'
-    }
-  },
-  {
-    id: 'countdown-timer',
-    name: 'Geri Sayım Sayacı',
-    category: 'interactive',
-    icon: '⏱️',
-    description: 'Belirlenen süreye canlı geri sayım',
-    defaultData: {
-      title: 'Lansmana Kalan Süre',
-      minutes: 15,
-      seconds: 0,
-      bgColor: '#1e1b4b',
-      textColor: '#ffffff',
-      padding: '20px',
-      borderRadius: '12px'
-    }
-  },
-
-  // --- 4. MEDYA VE FORM ---
-  {
-    id: 'image-card',
-    name: 'Görsel Kartı',
-    category: 'media',
-    icon: '🖼️',
-    description: 'Bağlantı veya yerel görsel kutusu',
-    defaultData: {
-      imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
-      caption: 'Soyut Sanat & Modern Tasarım',
-      borderRadius: '12px',
-      shadow: '0 8px 16px rgba(0,0,0,0.1)'
-    }
-  },
-  {
-    id: 'kpi-stat-card',
-    name: 'İstatistik & Metrik Kartı',
-    category: 'media',
-    icon: '📊',
-    description: 'Büyük rakamlı gösterge kartı',
-    defaultData: {
-      metric: '%99.9',
-      label: 'Güvenlik & Uptime Oranı',
-      change: '+14% bu ay',
-      isPositive: true,
-      bgColor: '#ffffff',
-      textColor: '#0f172a',
-      padding: '24px',
-      borderRadius: '12px'
-    }
-  },
-  {
-    id: 'contact-form-widget',
-    name: 'Hızlı İletişim Formu',
-    category: 'media',
-    icon: '✉️',
-    description: 'Etkileşimli geri bildirim ve mesaj formu',
-    defaultData: {
-      title: 'Bize Ulaşın',
-      buttonText: 'Mesaj Gönder',
-      bgColor: '#ffffff',
-      padding: '24px',
-      borderRadius: '12px'
     }
   }
 ];
