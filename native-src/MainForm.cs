@@ -23,7 +23,7 @@ namespace MerenNative
 
         private void InitializeComponent()
         {
-            this.Text = "Meren Studio (Native x86-64)";
+            this.Text = "Meren Studio (Native x86-64) - .hrav Formatı";
             this.Width = 1240;
             this.Height = 840;
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -42,14 +42,12 @@ namespace MerenNative
         {
             try
             {
-                // Yerel Edge WebView2 ortamını başlat
                 var env = await CoreWebView2Environment.CreateAsync(null, Path.Combine(Path.GetTempPath(), "MerenStudio_UserData"));
                 await webView.EnsureCoreWebView2Async(env);
 
                 webView.CoreWebView2.Settings.IsWebMessageEnabled = true;
                 webView.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
 
-                // Gömülü UI HTML içeriğini oku ve yükle
                 string htmlContent = GetEmbeddedUiHtml();
                 webView.CoreWebView2.NavigateToString(htmlContent);
             }
@@ -69,7 +67,6 @@ namespace MerenNative
                 return reader.ReadToEnd();
             }
 
-            // Geliştirme modu yedeği
             string localPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "app_ui.html");
             if (File.Exists(localPath))
             {
@@ -130,8 +127,8 @@ namespace MerenNative
         {
             using var ofd = new OpenFileDialog
             {
-                Title = ".meren Dosyası Aç (Otomatik Şifre Çözülür)",
-                Filter = "Meren Şifreli Dokümanı (*.meren)|*.meren|Tüm Dosyalar (*.*)|*.*"
+                Title = ".hrav Dosyası Aç (Otomatik Şifre Çözülür)",
+                Filter = "Hrav Şifreli Dokümanı (*.hrav)|*.hrav|Tüm Dosyalar (*.*)|*.*"
             };
 
             if (ofd.ShowDialog(this) == DialogResult.OK)
@@ -165,16 +162,16 @@ namespace MerenNative
         {
             try
             {
-                var doc = JsonSerializer.Deserialize<MerenDocument>(payload.GetRawText());
+                var doc = JsonSerializer.Deserialize<HravDocument>(payload.GetRawText());
                 if (doc == null) return;
 
                 if (forceSaveAs || string.IsNullOrEmpty(currentFilePath))
                 {
                     using var sfd = new SaveFileDialog
                     {
-                        Title = ".meren Olarak Kaydet (Otomatik AES-256 Şifrelenir)",
-                        Filter = "Meren Şifreli Dokümanı (*.meren)|*.meren",
-                        FileName = (doc.title ?? "Belge") + ".meren"
+                        Title = ".hrav Olarak Kaydet (Otomatik AES-256 Şifrelenir)",
+                        Filter = "Hrav Şifreli Dokümanı (*.hrav)|*.hrav",
+                        FileName = (doc.title ?? "Belge") + ".hrav"
                     };
 
                     if (sfd.ShowDialog(this) != DialogResult.OK)
@@ -203,7 +200,7 @@ namespace MerenNative
         {
             try
             {
-                var doc = JsonSerializer.Deserialize<MerenDocument>(payload.GetRawText());
+                var doc = JsonSerializer.Deserialize<HravDocument>(payload.GetRawText());
                 if (doc == null) return;
 
                 using var sfd = new SaveFileDialog

@@ -6,10 +6,10 @@ using System.Text.Json;
 
 namespace MerenNative
 {
-    public class MerenDocument
+    public class HravDocument
     {
         public string version { get; set; } = "1.0";
-        public string title { get; set; } = "Yeni Meren Dokümanı";
+        public string title { get; set; } = "Yeni Hrav Dokümanı";
         public string createdAt { get; set; } = DateTime.UtcNow.ToString("o");
         public string updatedAt { get; set; } = DateTime.UtcNow.ToString("o");
         public string html { get; set; } = "";
@@ -20,21 +20,20 @@ namespace MerenNative
 
     public static class MerenEngine
     {
-        private static readonly byte[] MAGIC_BYTES = Encoding.UTF8.GetBytes("MEREN_V1\0"); // 9 bayt
+        private static readonly byte[] MAGIC_BYTES = Encoding.UTF8.GetBytes("HRAV_V1\0"); // 8 bayt
         private const int SALT_LENGTH = 16;
         private const int IV_LENGTH = 12;
         private const int TAG_LENGTH = 16;
-        private static readonly int HEADER_LENGTH = MAGIC_BYTES.Length + SALT_LENGTH + IV_LENGTH + TAG_LENGTH; // 53 bayt
+        private static readonly int HEADER_LENGTH = MAGIC_BYTES.Length + SALT_LENGTH + IV_LENGTH + TAG_LENGTH; // 52 bayt
 
         private const string APP_SECRET = "MerenStudio#SecureEncryptedFormat@2026!7x9K$qL";
 
         private static byte[] DeriveKey(byte[] salt)
         {
-            using var pbkdf2 = new Rfc2898DeriveBytes(APP_SECRET, salt, 100000, HashAlgorithmName.SHA256);
-            return pbkdf2.GetBytes(32); // 256-bit AES anahtarı
+            return Rfc2898DeriveBytes.Pbkdf2(APP_SECRET, salt, 100000, HashAlgorithmName.SHA256, 32);
         }
 
-        public static byte[] PackAndEncrypt(MerenDocument doc)
+        public static byte[] PackAndEncrypt(HravDocument doc)
         {
             doc.updatedAt = DateTime.UtcNow.ToString("o");
             string json = JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = false });
@@ -62,7 +61,7 @@ namespace MerenNative
             return ms.ToArray();
         }
 
-        public static MerenDocument DecryptAndUnpack(byte[] fileBytes)
+        public static HravDocument DecryptAndUnpack(byte[] fileBytes)
         {
             if (fileBytes == null || fileBytes.Length < HEADER_LENGTH)
             {
@@ -74,7 +73,7 @@ namespace MerenNative
             {
                 if (fileBytes[i] != MAGIC_BYTES[i])
                 {
-                    throw new InvalidDataException("Geçersiz dosya formatı! Bu dosya bir .meren dosyası değil.");
+                    throw new InvalidDataException("Geçersiz dosya formatı! Bu dosya bir .hrav dosyası değil.");
                 }
             }
 
@@ -107,7 +106,7 @@ namespace MerenNative
                 }
 
                 string json = Encoding.UTF8.GetString(plaintext);
-                var doc = JsonSerializer.Deserialize<MerenDocument>(json);
+                var doc = JsonSerializer.Deserialize<HravDocument>(json);
                 return doc ?? throw new InvalidDataException("JSON verisi ayrıştırılamadı.");
             }
             catch (Exception)
@@ -116,9 +115,9 @@ namespace MerenNative
             }
         }
 
-        public static string ExportToHtml(MerenDocument doc)
+        public static string ExportToHtml(HravDocument doc)
         {
-            string title = doc.title ?? "Meren Dokümanı";
+            string title = doc.title ?? "Hrav Dokümanı";
             string html = doc.html ?? "";
             string css = doc.css ?? "";
             string js = doc.js ?? "";

@@ -1,20 +1,18 @@
 @echo off
-:: Meren Studio - Windows Dosya Iliskilendirme Scripti
-:: Bu script .meren uzantisini Meren Studio ile iliskilendirir.
+:: Meren Studio - Windows .hrav Dosya Iliskilendirme Scripti
 echo ========================================================
-echo   .MEREN DOSYA UZANTISI WINDOWS KAYIT ISLEMI
+echo   .HRAV DOSYA UZANTISI WINDOWS KAYIT ISLEMI
 echo ========================================================
 echo.
 
-set APP_DIR=%~dp0
-set LAUNCHER=%APP_DIR%baslat.bat
+set APP_EXE=%~dp0MerenStudio.exe
 
-echo 1. .meren uzantisi kayit defterine ekleniyor...
-assoc .meren=MerenStudioDocument >nul 2>&1
-ftype MerenStudioDocument="%LAUNCHER%" "%%1" >nul 2>&1
+echo 1. .hrav uzantisi Meren Studio ile iliskilendiriliyor...
+assoc .hrav=MerenStudioHravDoc >nul 2>&1
+ftype MerenStudioHravDoc="%APP_EXE%" "%%1" >nul 2>&1
 
 echo.
-echo [BASARILI] Artik herhangi bir .meren dosyasina cift tiklandiginda
+echo [BASARILI] Artik herhangi bir .hrav dosyasina cift tiklandiginda
 echo           otomatik olarak Meren Studio acilacaktir!
 echo.
 pause

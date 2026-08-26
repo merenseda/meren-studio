@@ -1,11 +1,11 @@
 const crypto = require('crypto');
 
-// Özel Meren Dosya İmzası ve Sabitleri
-const MAGIC_BYTES = Buffer.from('MEREN_V1\0', 'utf-8'); // 9 bayt
+// Özel Hrav Dosya İmzası ve Sabitleri
+const MAGIC_BYTES = Buffer.from('HRAV_V1\0', 'utf-8'); // 8 bayt
 const SALT_LENGTH = 16;
 const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
-const HEADER_LENGTH = MAGIC_BYTES.length + SALT_LENGTH + IV_LENGTH + TAG_LENGTH; // 53 bayt
+const HEADER_LENGTH = MAGIC_BYTES.length + SALT_LENGTH + IV_LENGTH + TAG_LENGTH; // 52 bayt
 
 // Dahili Uygulama Anahtarı (Master Secret)
 const APP_SECRET = 'MerenStudio#SecureEncryptedFormat@2026!7x9K$qL';
@@ -18,14 +18,14 @@ function deriveKey(salt) {
 }
 
 /**
- * Verilen Meren doküman verisini şifreleyip .meren ikili (binary) Buffer'ı oluşturur.
+ * Verilen Hrav doküman verisini şifreleyip .hrav ikili (binary) Buffer'ı oluşturur.
  * @param {Object} documentData - { title, html, css, js, metadata }
- * @returns {Buffer} Şifrelenmiş .meren dosya içeriği
+ * @returns {Buffer} Şifrelenmiş .hrav dosya içeriği
  */
-function packAndEncryptMeren(documentData) {
+function packAndEncryptHrav(documentData) {
   const payload = {
     version: '1.0',
-    title: documentData.title || 'Yeni Meren Dokümanı',
+    title: documentData.title || 'Yeni Hrav Dokümanı',
     createdAt: documentData.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     html: documentData.html || '',
@@ -46,7 +46,7 @@ function packAndEncryptMeren(documentData) {
   const ciphertext = Buffer.concat([cipher.update(plaintextBuffer), cipher.final()]);
   const authTag = cipher.getAuthTag();
 
-  // Dosya Başlığı: MAGIC (9) + SALT (16) + IV (12) + TAG (16) + CIPHERTEXT
+  // Dosya Başlığı: MAGIC (8) + SALT (16) + IV (12) + TAG (16) + CIPHERTEXT
   return Buffer.concat([
     MAGIC_BYTES,
     salt,
@@ -57,11 +57,11 @@ function packAndEncryptMeren(documentData) {
 }
 
 /**
- * Şifreli .meren dosyasını okur, bütünlüğünü doğrular ve JSON dokümanını çözer.
- * @param {Buffer} fileBuffer - .meren dosyasının ham ikili verisi
+ * Şifreli .hrav dosyasını okur, bütünlüğünü doğrular ve JSON dokümanını çözer.
+ * @param {Buffer} fileBuffer - .hrav dosyasının ham ikili verisi
  * @returns {Object} Çözülmüş doküman verisi { version, title, createdAt, updatedAt, html, css, js, metadata }
  */
-function decryptAndUnpackMeren(fileBuffer) {
+function decryptAndUnpackHrav(fileBuffer) {
   if (!Buffer.isBuffer(fileBuffer)) {
     fileBuffer = Buffer.from(fileBuffer);
   }
@@ -73,7 +73,7 @@ function decryptAndUnpackMeren(fileBuffer) {
   // 1. Magic Bytes kontrolü
   const magic = fileBuffer.subarray(0, MAGIC_BYTES.length);
   if (!magic.equals(MAGIC_BYTES)) {
-    throw new Error('Geçersiz dosya formatı! Bu dosya bir .meren dosyası değil.');
+    throw new Error('Geçersiz dosya formatı! Bu dosya bir .hrav dosyası değil.');
   }
 
   // 2. Başlık bileşenlerini ayrıştır
@@ -104,10 +104,10 @@ function decryptAndUnpackMeren(fileBuffer) {
 }
 
 /**
- * Meren dokümanını tek parça standart HTML çıktısına dönüştürür (Export için).
+ * Hrav dokümanını tek parça standart HTML çıktısına dönüştürür (Export için).
  */
 function exportToStandardHtml(documentData) {
-  const title = documentData.title || 'Meren Dokümanı';
+  const title = documentData.title || 'Hrav Dokümanı';
   const html = documentData.html || '';
   const css = documentData.css || '';
   const js = documentData.js || '';
@@ -119,7 +119,6 @@ function exportToStandardHtml(documentData) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)}</title>
   <style>
-    /* Meren Temel Stilleri */
     *, *::before, *::after { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -129,14 +128,12 @@ function exportToStandardHtml(documentData) {
       background-color: #ffffff;
       line-height: 1.6;
     }
-    /* Kullanıcı Özel CSS */
     ${css}
   </style>
 </head>
 <body>
   ${html}
   <script>
-    /* Kullanıcı Özel JS */
     ${js}
   </script>
 </body>
@@ -151,8 +148,8 @@ function escapeHtml(text) {
 }
 
 module.exports = {
-  packAndEncryptMeren,
-  decryptAndUnpackMeren,
+  packAndEncryptHrav,
+  decryptAndUnpackHrav,
   exportToStandardHtml,
   MAGIC_BYTES
 };

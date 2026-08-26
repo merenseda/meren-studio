@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-const { packAndEncryptMeren } = require('../src/merenEngine');
+const { packAndEncryptHrav } = require('../src/merenEngine');
 
 const sampleDoc = {
-  title: 'Örnek Meren Tasarımı ve İnteraktif Uygulama',
+  title: 'Örnek Hrav Tasarımı ve İnteraktif Uygulama',
   html: `<div class="meren-container">
   <div class="header-card">
-    <div class="tag">🔒 AES-256 Şifreli .meren Formatı</div>
-    <h1>Özel .meren Dosya Formatı</h1>
+    <div class="tag">🔒 AES-256 Şifreli .hrav Formatı</div>
+    <h1>Özel .hrav Dosya Formatı</h1>
     <p class="subtitle">Bu belge Not Defteri ile açılamaz, yalnızca Meren Studio ile okunur ve düzenlenir.</p>
   </div>
 
@@ -41,7 +41,7 @@ const sampleDoc = {
         <tr>
           <th>Özellik</th>
           <th>Standart .html</th>
-          <th>Özel .meren Formatı</th>
+          <th>Özel .hrav Formatı</th>
         </tr>
       </thead>
       <tbody>
@@ -63,7 +63,7 @@ const sampleDoc = {
         <tr>
           <td><strong>Taşınabilirlik</strong></td>
           <td>✅ Var</td>
-          <td>✅ <strong>Her Bilgisayarda Çalışır (Portable)</strong></td>
+          <td>✅ <strong>Her Bilgisayarda Tek EXE ile Çalışır</strong></td>
         </tr>
       </tbody>
     </table>
@@ -246,9 +246,9 @@ if (colorPicker && dynamicBox) {
 }`
 };
 
-const encrypted = packAndEncryptMeren(sampleDoc);
-const targetPath = path.join(__dirname, '..', 'ornek_belge.meren');
+const encrypted = packAndEncryptHrav(sampleDoc);
+const targetPath = path.join(__dirname, '..', 'ornek_belge.hrav');
 fs.writeFileSync(targetPath, encrypted);
 
-console.log('✓ "ornek_belge.meren" başarıyla oluşturuldu: ' + targetPath);
+console.log('✓ "ornek_belge.hrav" başarıyla oluşturuldu: ' + targetPath);
 console.log('✓ Boyut: ' + encrypted.length + ' bayt');

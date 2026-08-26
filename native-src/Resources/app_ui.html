@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meren Studio Native</title>
+  <title>Meren Studio - .hrav Düzenleyici</title>
   <style>
     :root {
       --bg-main: #0c1017;
@@ -35,7 +35,7 @@
     .brand-badge { display: flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: 8px; }
     .brand-icon { font-size: 1.1rem; }
     .brand-text { font-size: 0.92rem; font-weight: 600; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .native-pill { font-size: 0.65rem; background: #10b981; color: #ffffff; padding: 2px 6px; border-radius: 10px; font-weight: 700; text-transform: uppercase; margin-left: 4px; }
+    .format-pill { font-size: 0.65rem; background: #6366f1; color: #ffffff; padding: 2px 6px; border-radius: 10px; font-weight: 700; text-transform: uppercase; margin-left: 4px; }
     
     .doc-title-wrapper { display: flex; align-items: center; gap: 8px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; padding: 2px 8px; }
     .doc-title-wrapper:focus-within { border-color: var(--border-focus); }
@@ -131,8 +131,8 @@
       <div class="header-left">
         <div class="brand-badge">
           <span class="brand-icon">💎</span>
-          <span class="brand-text">.meren <strong>Studio</strong></span>
-          <span class="native-pill">Native</span>
+          <span class="brand-text">Meren <strong>Studio</strong></span>
+          <span class="format-pill">.hrav</span>
         </div>
         <div class="doc-title-wrapper">
           <input type="text" id="docTitleInput" class="doc-title-input" value="Başlıksız Belge" title="Belge Başlığı">
@@ -216,7 +216,7 @@
         <div class="preview-header">
           <div class="preview-indicator">
             <span class="pulse-dot"></span>
-            <span class="preview-title">Yerel Makine Motoru Canlı Çıktı</span>
+            <span class="preview-title">Canlı Çıktı & Etkileşim</span>
           </div>
           <button class="tool-btn" id="btnRefreshPreview">🔄</button>
         </div>
@@ -228,7 +228,7 @@
 
     <footer class="app-statusbar">
       <div class="statusbar-left">
-        <span class="status-badge secure">🔒 AES-256-GCM (CPU AES-NI)</span>
+        <span class="status-badge secure">🔒 AES-256-GCM (.hrav Şifreli)</span>
         <span class="status-item" id="filePathStatus">Yeni Belge</span>
       </div>
       <div class="statusbar-right">
@@ -241,10 +241,10 @@
 
   <script>
     const DEFAULT_DOC = {
-      title: 'Meren Native Dokümanı',
-      html: '<div class="card"><h1>💎 Meren Native Studio</h1><p>Bu program doğrudan <strong>x86-64 Makine Diline</strong> derlenmiştir ve ek hiçbir klasöre ihtiyaç duymadan <strong>tek bir .exe</strong> olarak çalışır.</p><button id="btnClick" class="btn">İnteraktif Test</button><p id="out"></p></div>',
+      title: 'Yeni Hrav Dokümanı',
+      html: '<div class="card"><h1>💎 Meren Studio (.hrav)</h1><p>Bu dosya <strong>.hrav</strong> formatında ve <strong>AES-256-GCM</strong> ile otomatik şifrelenir. İçerisinde HTML5, CSS3 ve JavaScript kodları güvenle çalışır.</p><button id="btnClick" class="btn">İnteraktif Test</button><p id="out"></p></div>',
       css: '.card { padding: 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-family: sans-serif; } h1 { color: #1e1b4b; } .btn { background: #6366f1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }',
-      js: 'document.getElementById("btnClick").addEventListener("click", () => { document.getElementById("out").innerHTML = "⚡ <strong>Tam performanslı JavaScript etkileşimi çalışıyor!</strong>"; });'
+      js: 'document.getElementById("btnClick").addEventListener("click", () => { document.getElementById("out").innerHTML = "⚡ <strong>.hrav dosyanızda JavaScript motoru tam performans çalışıyor!</strong>"; });'
     };
 
     let currentDoc = JSON.parse(JSON.stringify(DEFAULT_DOC));
@@ -316,7 +316,6 @@
       }, 150);
     }
 
-    // Input events
     docTitleInput.addEventListener('input', () => { currentDoc.title = docTitleInput.value; setDirty(true); });
     [htmlEditor, cssEditor, jsEditor].forEach(ed => {
       ed.addEventListener('input', () => {
@@ -343,7 +342,6 @@
       triggerRender();
     });
 
-    // View modes
     document.querySelectorAll('.mode-tabs .tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.mode-tabs .tab-btn').forEach(b => b.classList.remove('active'));
@@ -354,7 +352,6 @@
       });
     });
 
-    // Code tabs
     document.querySelectorAll('.code-tab-bar .code-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.code-tab-bar .code-tab').forEach(t => t.classList.remove('active'));
@@ -364,7 +361,6 @@
       });
     });
 
-    // Toolbar formatting
     document.querySelectorAll('.tool-btn[data-command], .tool-btn[data-format]').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.dataset.command) document.execCommand(btn.dataset.command, false, null);
@@ -376,7 +372,6 @@
       });
     });
 
-    // Actions to Native
     document.getElementById('btnNew').addEventListener('click', () => {
       currentDoc = JSON.parse(JSON.stringify(DEFAULT_DOC));
       filePathStatus.textContent = 'Yeni Belge';
@@ -400,7 +395,6 @@
     document.getElementById('btnExportHtml').addEventListener('click', () => sendToNative('exportHtml', collectCurrentDoc()));
     document.getElementById('btnRefreshPreview').addEventListener('click', triggerRender);
 
-    // Shortcuts
     window.addEventListener('keydown', e => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
@@ -415,7 +409,6 @@
       }
     });
 
-    // Inserters
     function addSnippet(h, c, j) {
       htmlEditor.value += '\n\n' + h;
       if (c) cssEditor.value += '\n\n' + c;
@@ -432,7 +425,7 @@
     });
 
     document.getElementById('btnAddCardWidget').addEventListener('click', () => {
-      addSnippet(`<div class="card-box"><h3>🎴 Native Kart</h3><p>Bu kart doğrudan .meren dosyasında şifreli olarak saklanır.</p></div>`, `.card-box { background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:16px; margin:10px 0; }`, '');
+      addSnippet(`<div class="card-box"><h3>🎴 Native Kart</h3><p>Bu kart doğrudan .hrav dosyasında şifreli olarak saklanır.</p></div>`, `.card-box { background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:16px; margin:10px 0; }`, '');
     });
 
     document.getElementById('btnAddAlertWidget').addEventListener('click', () => {
@@ -448,7 +441,6 @@
       addSnippet(`<canvas id="${cid}" width="400" height="200" style="border:2px dashed #94a3b8; border-radius:8px;"></canvas>`, '', `const cv=document.getElementById('${cid}'), cx=cv.getContext('2d'); let p=false; cv.onmousedown=()=>p=true; window.onmouseup=()=>p=false; cv.onmousemove=(e)=>{ if(!p)return; const r=cv.getBoundingClientRect(); cx.lineWidth=3; cx.strokeStyle='#6366f1'; cx.lineTo(e.clientX-r.left, e.clientY-r.top); cx.stroke(); cx.beginPath(); cx.moveTo(e.clientX-r.left, e.clientY-r.top); };`);
     });
 
-    // Start
     loadDoc(currentDoc);
     sendToNative('ready', {});
   </script>
