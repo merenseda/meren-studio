@@ -3,47 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meren Studio</title>
+  <title>Meren Studio - No-Code Görsel Web Tasarımcısı</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app-container">
-    <!-- Üst Başlık & Araç Çubuğu -->
+    <!-- Üst Başlık & Eylem Çubuğu -->
     <header class="app-header">
       <div class="header-left">
         <div class="brand-badge">
           <span class="brand-icon">💎</span>
-          <span class="brand-text">.meren <strong>Studio</strong></span>
+          <span class="brand-text">Meren <strong>Studio</strong></span>
+          <span class="format-pill">No-Code</span>
         </div>
         <div class="doc-title-wrapper">
-          <input type="text" id="docTitleInput" class="doc-title-input" value="Başlıksız Belge" title="Belge Başlığı (Tıklayıp Değiştirin)">
+          <input type="text" id="docTitleInput" class="doc-title-input" value="Başlıksız No-Code Dokümanı" title="Doküman Başlığı">
           <span id="saveStatusDot" class="status-dot saved" title="Kaydedildi"></span>
         </div>
       </div>
 
       <div class="header-center">
-        <!-- Görünüm Modları -->
-        <div class="mode-tabs">
-          <button class="tab-btn active" data-mode="split" title="Kod ve Canlı Önizleme Yan Yana">
-            <span class="tab-icon">⚡</span> Bölünmüş Görünüm
-          </button>
-          <button class="tab-btn" data-mode="visual" title="Görsel WYSIWYG Düzenleyici">
-            <span class="tab-icon">✏️</span> Görsel Editör
-          </button>
-          <button class="tab-btn" data-mode="preview" title="Yalnızca Çalışan İnteraktif Çıktı">
-            <span class="tab-icon">👁️</span> Canlı Önizleme
-          </button>
-          <button class="tab-btn" data-mode="code" title="Tam Ekran Kod Düzenleyici">
-            <span class="tab-icon">💻</span> Kod Editörü
-          </button>
-        </div>
+        <button id="btnTogglePreview" class="mode-toggle-btn" title="Canlı Önizleme Modunu Aç/Kapat">
+          <span class="toggle-icon">👁️</span> <span id="previewBtnText">Önizleme Modu</span>
+        </button>
       </div>
 
       <div class="header-right">
-        <button id="btnNew" class="action-btn" title="Yeni Dosya (Ctrl+N)">
+        <button id="btnNew" class="action-btn" title="Yeni Doküman (Ctrl+N)">
           <span>➕</span> Yeni
         </button>
-        <button id="btnOpen" class="action-btn" title=".meren Dosyası Aç (Ctrl+O)">
+        <button id="btnOpen" class="action-btn" title=".hrav Dosyası Aç (Ctrl+O)">
           <span>📂</span> Aç
         </button>
         <button id="btnSave" class="action-btn primary" title="Kaydet (Ctrl+S)">
@@ -58,110 +47,57 @@
       </div>
     </header>
 
-    <!-- Hızlı Bileşen & Araç Şeridi (Sub-toolbar) -->
-    <div class="quick-toolbar" id="quickToolbar">
-      <div class="toolbar-group">
-        <span class="toolbar-label">Görsel Araçlar:</span>
-        <button class="tool-btn" data-command="bold" title="Kalın (Ctrl+B)"><b>B</b></button>
-        <button class="tool-btn" data-command="italic" title="İtalik (Ctrl+I)"><i>I</i></button>
-        <button class="tool-btn" data-command="underline" title="Altı Çizili (Ctrl+U)"><u>U</u></button>
-        <button class="tool-btn" data-command="strikeThrough" title="Üstü Çizili"><s>S</s></button>
-        <div class="tool-divider"></div>
-        <button class="tool-btn" data-format="h1" title="Büyük Başlık">H1</button>
-        <button class="tool-btn" data-format="h2" title="Orta Başlık">H2</button>
-        <button class="tool-btn" data-format="h3" title="Küçük Başlık">H3</button>
-        <button class="tool-btn" data-format="p" title="Paragraf">P</button>
-        <div class="tool-divider"></div>
-        <button class="tool-btn" data-command="insertUnorderedList" title="Madde İmleri">• Liste</button>
-        <button class="tool-btn" data-command="insertOrderedList" title="Numaralı Liste">1. Liste</button>
-      </div>
-
-      <div class="toolbar-group">
-        <span class="toolbar-label">İnteraktif Bileşen Ekle:</span>
-        <button class="chip-btn" id="btnAddButtonWidget">⚡ Buton & Sayaç</button>
-        <button class="chip-btn" id="btnAddCardWidget">🎴 Animasyonlu Kart</button>
-        <button class="chip-btn" id="btnAddAlertWidget">💡 Bilgi Kutusu</button>
-        <button class="chip-btn" id="btnAddTableWidget">📊 Tablo</button>
-        <button class="chip-btn" id="btnAddCanvasWidget">🎨 Çizim Tuvali</button>
-        <button class="chip-btn" id="btnAddTodoWidget">✅ Görev Listesi</button>
-      </div>
-    </div>
-
-    <!-- Ana Çalışma Alanı -->
-    <main class="main-workspace" id="mainWorkspace">
+    <!-- Ana 3 Panelli Çalışma Alanı -->
+    <main class="studio-workspace" id="studioWorkspace">
       
-      <!-- Sol Panel: Kod Editörleri Panel Grubu -->
-      <section class="editor-pane" id="editorPane">
-        <div class="code-tab-bar">
-          <button class="code-tab active" data-target="htmlEditorWrap">
-            <span class="lang-dot html"></span> HTML
-          </button>
-          <button class="code-tab" data-target="cssEditorWrap">
-            <span class="lang-dot css"></span> CSS
-          </button>
-          <button class="code-tab" data-target="jsEditorWrap">
-            <span class="lang-dot js"></span> JavaScript
-          </button>
-          <div class="code-tab-fill"></div>
-          <button class="mini-btn" id="btnFormatCode" title="Kodu Düzenle / Hizala">✨ Düzenle</button>
+      <!-- SOL PANEL: Zengin Bileşen Paleti -->
+      <aside class="sidebar-palette" id="sidebarPalette">
+        <div class="palette-header">
+          <h3>Bileşen Kütüphanesi</h3>
+          <input type="text" id="componentSearch" class="palette-search-input" placeholder="Bileşen ara (Örn: Sayaç, Tablo)...">
         </div>
 
-        <div class="code-editors-container">
-          <div class="code-editor-wrap active" id="htmlEditorWrap">
-            <textarea id="htmlEditor" placeholder="HTML kodlarınızı buraya yazın..." spellcheck="false"></textarea>
-          </div>
-          <div class="code-editor-wrap" id="cssEditorWrap">
-            <textarea id="cssEditor" placeholder="Özel CSS stillerinizi buraya yazın..." spellcheck="false"></textarea>
-          </div>
-          <div class="code-editor-wrap" id="jsEditorWrap">
-            <textarea id="jsEditor" placeholder="JavaScript kodlarınızı buraya yazın..." spellcheck="false"></textarea>
+        <div class="palette-categories" id="paletteCategories">
+          <!-- Dinamik Olarak components.js ile Doldurulur -->
+        </div>
+      </aside>
+
+      <!-- ORTA PANEL: Görsel Çalışma Tuvali (Canvas) -->
+      <section class="canvas-viewport" id="canvasViewport">
+        <div class="canvas-page-wrapper">
+          <div class="visual-canvas" id="visualCanvas">
+            <!-- Dinamik No-Code Blokları -->
           </div>
         </div>
       </section>
 
-      <!-- Orta: Görsel WYSIWYG Editörü (Mod Aktif Olduğunda) -->
-      <section class="visual-pane" id="visualPane">
-        <div class="visual-container">
-          <div class="wysiwyg-content" id="wysiwygEditor" contenteditable="true" spellcheck="false">
-            <!-- Dinamik İçerik -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Sağ Panel: Canlı İnteraktif Render Önizleme (Sandbox iframe) -->
-      <section class="preview-pane" id="previewPane">
-        <div class="preview-header">
-          <div class="preview-indicator">
-            <span class="pulse-dot"></span>
-            <span class="preview-title">Canlı Çıktı & Etkileşim</span>
-          </div>
-          <div class="preview-actions">
-            <button class="mini-btn" id="btnRefreshPreview" title="Yeniden Çalıştır">🔄 Yenile</button>
-          </div>
-        </div>
-        <div class="preview-frame-container">
-          <iframe id="previewFrame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin" title="Canlı Render"></iframe>
-        </div>
-      </section>
+      <!-- SAĞ PANEL: Görsel Stil & Özellik Denetçisi (Inspector) -->
+      <aside class="sidebar-inspector" id="sidebarInspector">
+        <!-- Dinamik Olarak inspector.js ile Doldurulur -->
+      </aside>
 
     </main>
 
-    <!-- Alt Durum Çubuğu (Status Bar) -->
+    <!-- Alt Durum Çubuğu -->
     <footer class="app-statusbar">
       <div class="statusbar-left">
         <span class="status-badge secure">
-          <span class="badge-lock">🔒</span> AES-256-GCM Otomatik Şifreli
+          <span>🔒</span> AES-256-GCM (.hrav Otomatik Şifreli)
         </span>
-        <span class="status-item" id="filePathStatus">Henüz Kaydedilmedi (Yeni Belge)</span>
+        <span class="status-item" id="filePathStatus">Yeni Belge (Henüz Kaydedilmedi)</span>
       </div>
       <div class="statusbar-right">
+        <span class="status-item" id="blockCountStatus">0 Bileşen</span>
         <span class="status-item" id="fileSizeStatus">Boyut: ~0 B</span>
-        <span class="status-item" id="docStatsStatus">0 karakter</span>
         <span class="status-item ready-status">● Sistem Hazır</span>
       </div>
     </footer>
   </div>
 
+  <!-- JavaScript Modülleri -->
+  <script src="components.js"></script>
+  <script src="noCodeEngine.js"></script>
+  <script src="inspector.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

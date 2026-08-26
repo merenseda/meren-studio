@@ -1,27 +1,46 @@
 {
   "name": "meren-studio",
-  "version": "1.0.0",
-  "description": ".meren Dosya Formatı Görüntüleyici ve Düzenleyici",
+  "version": "2.0.0",
+  "description": "Meren Studio - No-Code Görsel Web Tasarımcısı ve Güvenli .hrav Editörü",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "test": "node test/testEngine.js",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --win portable"
+    "dist:setup": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable"
   },
   "build": {
     "appId": "com.meren.studio",
-    "productName": "MerenStudio",
+    "productName": "Meren Studio",
     "win": {
-      "target": "portable",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
       "fileAssociations": [
         {
-          "ext": "meren",
-          "name": "Meren Şifreli Dokümanı",
-          "description": "Meren Studio Güvenli HTML Dokümanı",
+          "ext": "hrav",
+          "name": "Hrav Şifreli Dokümanı",
+          "description": "Meren Studio No-Code Güvenli Dokümanı",
           "role": "Editor"
         }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Meren Studio",
+      "artifactName": "MerenStudio-Setup-${version}.exe",
+      "uninstallDisplayName": "Meren Studio Kaldır"
     },
     "portable": {
       "artifactName": "MerenStudio-Portable.exe"
@@ -32,15 +51,16 @@
   },
   "keywords": [
     "meren",
+    "no-code",
+    "hrav",
     "encryption",
     "aes-256",
-    "html-viewer",
-    "editor"
+    "visual-builder"
   ],
   "author": "Meren",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^40.8.0",
+    "electron": "^40.10.6",
     "electron-builder": "^26.15.3"
   }
 }

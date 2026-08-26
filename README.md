@@ -1,44 +1,43 @@
-# 💎 Meren Studio (`.meren` Format)
+# 💎 Meren Studio 2.0 - No-Code Görsel Web Tasarımcısı (`.hrav`)
 
-Meren Studio, tamamen özel **`.meren`** dosya uzantısını oluşturan, otomatik olarak `AES-256-GCM` ile şifreleyen ve içerisinde tam HTML5/CSS3/JavaScript motoru çalıştıran modern bir masaüstü geliştirme ve görüntüleme ortamıdır.
-
----
-
-## 🌟 Temel Özellikler
-
-- **🔒 Otomatik AES-256-GCM Şifreleme:** Dosyalar kaydedilirken arka planda otomatik şifrelenir. Dışarıdan Not Defteri ile açıldığında içerik görünmez.
-- **🛡️ Kriptografik Bütünlük (Auth Tag):** Dosya yetkisiz olarak değiştirilirse veya bozulursa uygulama tarafından algılanır.
-- **🌐 Tam Web Teknolojisi Desteği:** HTML5, modern CSS3 animasyonları ve JavaScript scriptleri sorunsuz çalışır.
-- **⚡ Çoklu Görünüm Modları:**
-  - **Bölünmüş Görünüm (Split View):** Kod editörü ve canlı önizleme yan yana.
-  - **Görsel Editör (WYSIWYG):** Zengin metin düzenleme modu.
-  - **Canlı Önizleme:** Tam ekran interaktif mod.
-- **📦 Taşınabilirlik (Portable):** Herhangi bir Windows bilgisayarda kurulum gerektirmeden çalışır.
-- **📤 HTML Export:** `.meren` dosyalarını dilediğiniz an standart `.html` olarak dışa aktarabilirsiniz.
+Meren Studio, sıfır kod yazarak (No-Code) modern, interaktif ve görsel web sayfaları / dokümanları oluşturmanızı sağlayan ve bu dokümanları **`AES-256-GCM`** algoritmasıyla otomatik şifreleyen **`.hrav`** dosya formatı stüdyosudur.
 
 ---
 
-## 🚀 Hızlı Başlangıç
+## 🌟 Yeni No-Code Özellikleri (v2.0)
 
-### Gereksinimler
-- Node.js (v18+)
+- **🎨 Sıfır Kod Zorunluluğu:** Ana ekranda HTML, CSS veya JS yazma ihtiyacı yoktur. Her şey görsel araçlarla düzenlenir.
+- **🧩 25+ Zengin Bileşen:**
+  - **Düzen:** Hero Alanı, 2/3 Sütunlu Grid, Buzlu Cam (Glassmorphism) Kart, Ayırıcı Çizgi.
+  - **Tipografi:** Başlıklar (H1, H2, H3), Paragraflar, Vurgulu Bilgi Kutuları, Etiketler.
+  - **İnteraktif Araçlar:** Canlı Sayaç Butonu, Açılır SSS Akordiyonu, İlerleme Çubuğu, Görev Listesi (Todo), Dinamik Veri Tablosu, Çizim Tuvali, Geri Sayım Sayacı.
+  - **Medya & Form:** Görseller, KPI İstatistik Kartları, İletişim Formları.
+- **✨ Görsel Stil & Özellik Denetçisi (Inspector):** Sağ panelden renkler, gradyanlar, iç/dış boşluklar (padding/margin slider), köşe yuvarlaklığı ve gölgeler fareyle ayarlanır.
+- **🔒 Donanımsal AES-256 Şifreleme:** `.hrav` dosyaları kaydedildiğinde otomatik şifrelenir ve harici editörlerle açılamaz.
+- **📦 Kurulumcu (Setup.exe) ve Taşınabilir (Portable) Desteği:** Tek tıkla kurulum sihirbazı veya kurulumsuz taşınabilir paket üretilebilir.
 
-### Kurulum
-```bash
-npm install
-```
+---
 
-### Uygulamayı Başlatma
+## 🚀 Geliştirme ve Çalıştırma
+
+### 1. Geliştirme Modunda Başlatma
 ```bash
 npm start
 ```
-veya doğrudan `baslat.bat` dosyasına çift tıklayabilirsiniz.
+veya klasördeki `baslat.bat` dosyasına çift tıklayabilirsiniz.
 
-### Bağımsız Portable EXE Üretme
+### 2. Kurulum Paketi (`Setup.exe`) Üretme
 ```bash
-npm run pack
-# veya tek dosya portable paket:
-npm run dist
+npm run dist:setup
+```
+Bu komut `dist/` klasörü altına Windows için çift tıklanıp kurulan **`MerenStudio-Setup-2.0.0.exe`** dosyasını üretir. Bu kurulum:
+- Uygulamayı bilgisayara kurar.
+- Masaüstü ve Başlat Menüsü kısayolları oluşturur.
+- `.hrav` dosya uzantısını Windows'a otomatik tanıtır.
+
+### 3. Taşınabilir (Portable) EXE Üretme
+```bash
+npm run dist:portable
 ```
 
 ---
@@ -48,24 +47,20 @@ npm run dist
 ```
 meren-studio/
 ├── src/
-│   ├── main.js             # Electron ana süreç yönetimi & IPC
-│   ├── preload.js          # Güvenli contextBridge köprüsü
-│   ├── merenEngine.js      # AES-256-GCM şifreleme/çözme motoru
+│   ├── main.js                  # Electron ana süreç yönetimi
+│   ├── preload.js               # Güvenli köprü
+│   ├── merenEngine.js           # AES-256-GCM .hrav şifreleme motoru
 │   └── renderer/
-│       ├── index.html      # Ana arayüz
-│       ├── styles.css      # Modern dark tema ve stiller
-│       └── app.js          # Arayüz ve etkileşim mantığı
+│       ├── index.html           # 3 panelli stüdyo arayüzü
+│       ├── styles.css           # Modern dark glassmorphic stiller
+│       ├── components.js        # Zengin bileşen kütüphanesi
+│       ├── noCodeEngine.js      # Görsel tuval ve blok yöneticisi
+│       ├── inspector.js         # Sağ stil & özellik denetçisi
+│       └── app.js               # Ana uygulama kontrolcüsü
 ├── scripts/
-│   └── createSampleDoc.js  # Örnek .meren dosyası üretici
-├── test/
-│   └── testEngine.js       # Şifreleme ve bütünlük testleri
-├── baslat.bat              # Tek tıkla başlatıcı
-├── meren_kayit.bat         # Windows dosya ilişkilendirme
-├── ornek_belge.meren       # Örnek şifreli Meren dokümanı
-└── package.json
+│   └── createSampleDoc.js       # Örnek No-Code .hrav üretici
+├── baslat.bat                   # Hızlı başlatıcı
+├── git_push.bat                 # GitHub senkronizasyonu
+├── ornek_belge.hrav             # Örnek No-Code şifreli doküman
+└── package.json                 # Bağımlılıklar ve Setup.exe ayarları
 ```
-
----
-
-## 📄 Lisans
-Bu proje özel kullanım için geliştirilmiştir.

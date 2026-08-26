@@ -19,15 +19,16 @@ function deriveKey(salt) {
 
 /**
  * Verilen Hrav doküman verisini şifreleyip .hrav ikili (binary) Buffer'ı oluşturur.
- * @param {Object} documentData - { title, html, css, js, metadata }
+ * @param {Object} documentData - { title, blocks, html, css, js, metadata }
  * @returns {Buffer} Şifrelenmiş .hrav dosya içeriği
  */
 function packAndEncryptHrav(documentData) {
   const payload = {
-    version: '1.0',
+    version: documentData.version || '2.0',
     title: documentData.title || 'Yeni Hrav Dokümanı',
     createdAt: documentData.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    blocks: documentData.blocks || [],
     html: documentData.html || '',
     css: documentData.css || '',
     js: documentData.js || '',
@@ -59,7 +60,7 @@ function packAndEncryptHrav(documentData) {
 /**
  * Şifreli .hrav dosyasını okur, bütünlüğünü doğrular ve JSON dokümanını çözer.
  * @param {Buffer} fileBuffer - .hrav dosyasının ham ikili verisi
- * @returns {Object} Çözülmüş doküman verisi { version, title, createdAt, updatedAt, html, css, js, metadata }
+ * @returns {Object} Çözülmüş doküman verisi { version, title, blocks, createdAt, updatedAt, html, css, js, metadata }
  */
 function decryptAndUnpackHrav(fileBuffer) {
   if (!Buffer.isBuffer(fileBuffer)) {
@@ -123,16 +124,26 @@ function exportToStandardHtml(documentData) {
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 24px;
-      color: #24292f;
-      background-color: #ffffff;
+      padding: 30px 20px;
+      color: #1e293b;
+      background-color: #f8fafc;
       line-height: 1.6;
+    }
+    .meren-page-container {
+      max-width: 880px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
     ${css}
   </style>
 </head>
 <body>
-  ${html}
+  <div class="meren-page-container">
+    ${html}
+  </div>
   <script>
     ${js}
   </script>
