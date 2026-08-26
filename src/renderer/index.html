@@ -12,6 +12,11 @@
     <!-- Üst Başlık & Araç Çubuğu -->
     <header class="app-header">
       <div class="header-left">
+        <!-- Sol Paneli Aç / Kapat Butonu -->
+        <button id="btnToggleLeftSidebar" class="icon-toggle-btn" title="Sol Menüyü Gizle / Göster (Ctrl+B)">
+          <span class="toggle-icon">◀</span>
+        </button>
+
         <div class="brand-badge">
           <span class="brand-icon">🛡️</span>
           <span class="brand-text">Meren <strong>Vault</strong></span>
@@ -39,6 +44,11 @@
         <button id="btnPrintPdf" class="action-btn outline" title="Yazdır veya Güvenli PDF Olarak Kaydet">
           <span>🖨️</span> Yazdır / PDF
         </button>
+
+        <!-- Sağ Paneli Aç / Kapat Butonu -->
+        <button id="btnToggleRightSidebar" class="icon-toggle-btn" title="Sağ Denetçiyi Gizle / Göster">
+          <span class="toggle-icon">▶</span>
+        </button>
       </div>
     </header>
 
@@ -61,7 +71,10 @@
       <!-- SOL: Kasa & Günlük Bileşen Paleti -->
       <aside class="sidebar-palette" id="sidebarPalette">
         <div class="palette-header">
-          <h3>Kasa & Günlük Menüsü</h3>
+          <div class="panel-header-title-row">
+            <h3>Kasa & Günlük Menüsü</h3>
+            <button class="mini-collapse-btn" id="btnCollapseLeft" title="Menüyü Daralt">◀</button>
+          </div>
           <input type="text" id="componentSearch" class="palette-search-input" placeholder="Bileşen ara (Şifre, Günlük, Sağlık)...">
         </div>
 
@@ -69,6 +82,9 @@
           <!-- components.js ile doldurulur -->
         </div>
       </aside>
+
+      <!-- SOL BOYUTLANDIRMA TUTAMACI (Resizer) -->
+      <div class="resizer-handle resizer-left" id="resizerLeft" title="Genişliği ayarlamak için sürükleyin"></div>
 
       <!-- ORTA: Canlı Görsel Kasa Tuvali -->
       <section class="canvas-viewport" id="canvasViewport">
@@ -78,6 +94,9 @@
           </div>
         </div>
       </section>
+
+      <!-- SAĞ BOYUTLANDIRMA TUTAMACI (Resizer) -->
+      <div class="resizer-handle resizer-right" id="resizerRight" title="Genişliği ayarlamak için sürükleyin"></div>
 
       <!-- SAĞ: Stil & Özellik Denetçisi -->
       <aside class="sidebar-inspector" id="sidebarInspector">

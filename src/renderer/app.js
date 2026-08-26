@@ -15,7 +15,14 @@
   const paletteCategories = document.getElementById('paletteCategories');
   const visualCanvas = document.getElementById('visualCanvas');
   const sidebarInspector = document.getElementById('sidebarInspector');
+  const sidebarPalette = document.getElementById('sidebarPalette');
   const componentSearch = document.getElementById('componentSearch');
+
+  const btnToggleLeftSidebar = document.getElementById('btnToggleLeftSidebar');
+  const btnCollapseLeft = document.getElementById('btnCollapseLeft');
+  const btnToggleRightSidebar = document.getElementById('btnToggleRightSidebar');
+  const resizerLeft = document.getElementById('resizerLeft');
+  const resizerRight = document.getElementById('resizerRight');
 
   const filePathStatus = document.getElementById('filePathStatus');
   const blockCountStatus = document.getElementById('blockCountStatus');
@@ -27,6 +34,7 @@
 
     renderComponentPalette();
     setupEventListeners();
+    setupResizablePanels();
     setupShortcutKeys();
 
     engine.on('change', (blocks) => {
@@ -35,7 +43,6 @@
       setDirty(true);
     });
 
-    // Varsayılan Yeni Kasa/Günlük Dokümanı (Düzenleme açık)
     setProtectedViewMode(false);
     engine.loadFromDocument({});
     setDirty(false);
@@ -128,6 +135,82 @@
     saveStatusDot.title = isDirty ? 'Değişiklikler kaydedilmedi' : 'Kaydedildi';
   }
 
+  // Boyutlandırılabilir ve Daraltılabilir Paneller
+  function setupResizablePanels() {
+    let isResizingLeft = false;
+    let isResizingRight = false;
+
+    // 1. Sol Panel Sürükleme
+    resizerLeft.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isResizingLeft = true;
+      resizerLeft.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+    });
+
+    // 2. Sağ Panel Sürükleme
+    resizerRight.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isResizingRight = true;
+      resizerRight.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isResizingLeft) {
+        let newWidth = e.clientX;
+        if (newWidth < 160) newWidth = 160;
+        if (newWidth > 550) newWidth = 550;
+        sidebarPalette.style.width = newWidth + 'px';
+        sidebarPalette.classList.remove('collapsed');
+        btnToggleLeftSidebar.classList.remove('panel-closed');
+      } else if (isResizingRight) {
+        let newWidth = window.innerWidth - e.clientX;
+        if (newWidth < 200) newWidth = 200;
+        if (newWidth > 600) newWidth = 600;
+        sidebarInspector.style.width = newWidth + 'px';
+        sidebarInspector.classList.remove('collapsed');
+        btnToggleRightSidebar.classList.remove('panel-closed');
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isResizingLeft) {
+        isResizingLeft = false;
+        resizerLeft.classList.remove('dragging');
+        document.body.style.cursor = '';
+      }
+      if (isResizingRight) {
+        isResizingRight = false;
+        resizerRight.classList.remove('dragging');
+        document.body.style.cursor = '';
+      }
+    });
+
+    // 3. Sol Paneli Gizle / Göster Butonları
+    function toggleLeftSidebar() {
+      const isCollapsed = sidebarPalette.classList.toggle('collapsed');
+      btnToggleLeftSidebar.classList.toggle('panel-closed', isCollapsed);
+      btnToggleLeftSidebar.querySelector('.toggle-icon').textContent = isCollapsed ? '▶' : '◀';
+    }
+
+    btnToggleLeftSidebar.addEventListener('click', toggleLeftSidebar);
+    if (btnCollapseLeft) btnCollapseLeft.addEventListener('click', toggleLeftSidebar);
+
+    // 4. Sağ Paneli Gizle / Göster Butonu
+    function toggleRightSidebar() {
+      const isCollapsed = sidebarInspector.classList.toggle('collapsed');
+      btnToggleRightSidebar.classList.toggle('panel-closed', isCollapsed);
+      btnToggleRightSidebar.querySelector('.toggle-icon').textContent = isCollapsed ? '◀' : '▶';
+    }
+
+    btnToggleRightSidebar.addEventListener('click', toggleRightSidebar);
+
+    // Çift tıklama ile panelleri varsayılana sıfırlama veya daraltma
+    resizerLeft.addEventListener('dblclick', toggleLeftSidebar);
+    resizerRight.addEventListener('dblclick', toggleRightSidebar);
+  }
+
   function setupEventListeners() {
     componentSearch.addEventListener('input', (e) => {
       renderComponentPalette(e.target.value);
@@ -137,12 +220,10 @@
       setDirty(true);
     });
 
-    // Word benzeri Düzenlemeyi Etkinleştir Butonu
     btnEnableEditing.addEventListener('click', () => {
       setProtectedViewMode(false);
     });
 
-    // Butonlar
     document.getElementById('btnNew').addEventListener('click', handleNewFile);
     document.getElementById('btnOpen').addEventListener('click', handleOpenFile);
     document.getElementById('btnSave').addEventListener('click', handleSaveFile);
@@ -180,7 +261,6 @@
     filePathStatus.textContent = res.filePath;
     docTitleInput.value = res.data.title || 'Başlıksız Kasa';
     
-    // Dosya açıldığında otomatik Korumalı Görünüme geç
     setProtectedViewMode(true);
     engine.loadFromDocument(res.data);
     setDirty(false);
@@ -243,6 +323,11 @@
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
         handlePrintPdf();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        const isCollapsed = sidebarPalette.classList.toggle('collapsed');
+        btnToggleLeftSidebar.classList.toggle('panel-closed', isCollapsed);
+        btnToggleLeftSidebar.querySelector('.toggle-icon').textContent = isCollapsed ? '▶' : '◀';
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
         if (isProtectedView) return;
         const sel = engine.getSelectedBlock();
