@@ -119,7 +119,7 @@ namespace MerenNative
             }
             catch (Exception ex)
             {
-                SendMessageToWeb("error", new { message = ex.Message });
+                SendJsonToWeb(new { type = "error", message = ex.Message });
             }
         }
 
@@ -145,8 +145,9 @@ namespace MerenNative
                 var document = MerenEngine.DecryptAndUnpack(raw);
                 currentFilePath = filePath;
 
-                SendMessageToWeb("loadedDoc", new
+                SendJsonToWeb(new
                 {
+                    type = "loadedDoc",
                     filePath = currentFilePath,
                     fileSize = raw.Length,
                     document = document
@@ -184,8 +185,9 @@ namespace MerenNative
                 byte[] encryptedBytes = MerenEngine.PackAndEncrypt(doc);
                 File.WriteAllBytes(currentFilePath, encryptedBytes);
 
-                SendMessageToWeb("saveSuccess", new
+                SendJsonToWeb(new
                 {
+                    type = "saveSuccess",
                     filePath = currentFilePath,
                     fileSize = encryptedBytes.Length
                 });
@@ -223,18 +225,9 @@ namespace MerenNative
             }
         }
 
-        private void SendMessageToWeb(string type, object data)
+        private void SendJsonToWeb(object messageObj)
         {
-            var msg = new { type, data };
-            string json = JsonSerializer.Serialize(new
-            {
-                type = type,
-                filePath = (data as dynamic)?.filePath,
-                fileSize = (data as dynamic)?.fileSize,
-                document = (data as dynamic)?.document,
-                message = (data as dynamic)?.message
-            });
-
+            string json = JsonSerializer.Serialize(messageObj);
             webView.BeginInvoke(new Action(() =>
             {
                 webView.CoreWebView2?.PostWebMessageAsJson(json);
