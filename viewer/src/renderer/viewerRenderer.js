@@ -178,26 +178,27 @@ class ViewerRenderer {
           </div>
         `;
 
-      // 5. SAĞLIK VE ACİL İRTİBAT
-      case 'vault-health-card':
+      // 5. ŞİFRELİ GÖRSEL / BELGE
+      case 'vault-image-card':
+        const hasImg = !!d.imageData;
         return `
-          <div class="nc-health-card" style="${inlineStyle}">
-            <div class="nc-health-top">
-              <span class="nc-health-icon">🏥</span>
-              <div>
-                <h3>${escapeHtml(d.fullName)}</h3>
-                <span class="blood-chip active" style="margin-top: 4px; display:inline-block;">Kan Grubu: ${escapeHtml(d.bloodType)}</span>
+          <div class="nc-image-card" style="${inlineStyle}">
+            <div class="nc-image-header">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">🖼️</span>
+                <h4 style="margin:0; font-size:1.05rem; color:#0f172a;">${escapeHtml(d.caption || 'Belge / Evrak')}</h4>
               </div>
+              <span class="nc-viewer-badge">Görsel Belge</span>
             </div>
-            <div class="nc-health-grid">
-              <div><small>Alerjiler:</small> <p>${escapeHtml(d.allergies || '')}</p></div>
-              <div><small>Kronik / İlaç:</small> <p>${escapeHtml(d.chronicConditions || '')}</p></div>
-            </div>
-            <div class="nc-emergency-contact-box">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>🚨 <strong>Acil İrtibat:</strong> <span>${escapeHtml(d.emergencyContact || '')}</span></div>
-                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.emergencyContact || '')}" title="Numarayı Kopyala">📞 Kopyala</button>
-              </div>
+
+            <div class="nc-image-viewer-box">
+              ${hasImg ? `
+                <img src="${d.imageData}" alt="${escapeHtml(d.caption || '')}" style="max-height: ${d.maxHeight || 380}px; object-fit: ${d.fit || 'contain'}; width: 100%; border-radius: 8px; display: block; cursor: pointer;" class="nc-vault-img-preview" data-action="zoom-image">
+              ` : `
+                <div style="padding: 24px; text-align: center; color: #94a3b8; font-size: 0.85rem;">
+                  <span>Görsel veya evrak eklenmemiş.</span>
+                </div>
+              `}
             </div>
           </div>
         `;
@@ -236,14 +237,6 @@ class ViewerRenderer {
       // 7. AYIRICI ÇİZGİ
       case 'vault-divider':
         return `<hr style="border: none; border-top: 1px solid ${d.lineColor || '#e2e8f0'}; margin: ${d.margin || '20px'} 0;">`;
-
-      default:
-        return `<div style="${inlineStyle}">${escapeHtml(d.text || d.title || block.componentId)}</div>`;
-    }
-  }r>'}</tbody>
-            </table>
-          </div>
-        `;
 
       default:
         return `<div style="${inlineStyle}">${escapeHtml(d.text || d.title || block.componentId)}</div>`;

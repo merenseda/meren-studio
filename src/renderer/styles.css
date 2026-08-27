@@ -1044,10 +1044,160 @@ mark.search-highlight.active-highlight {
 .status-badge.secure { display: flex; align-items: center; gap: 4px; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
 .ready-status { color: var(--success); font-weight: 500; }
 
+/* === GERİ AL / YİNELE & OTO-KAYDET === */
+.history-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.action-btn.icon-only {
+  padding: 6px 9px;
+  font-size: 0.85rem;
+  min-width: 32px;
+}
+
+.auto-save-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-main);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+.auto-save-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 28px;
+  height: 16px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider-toggle {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #334155;
+  transition: .2s;
+  border-radius: 16px;
+}
+.slider-toggle:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+input:checked + .slider-toggle {
+  background-color: var(--accent-primary);
+}
+input:checked + .slider-toggle:before {
+  transform: translateX(12px);
+}
+
+/* === ZENGİN METİN ARAÇ ÇUBUĞU === */
+.rich-text-floating-toolbar {
+  position: absolute;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 4px 6px;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+  animation: slideInDown 0.15s ease-out;
+}
+.rich-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.rich-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+.rich-divider {
+  width: 1px;
+  height: 16px;
+  background: #475569;
+  margin: 0 2px;
+}
+
+/* === ŞİFRELİ GÖRSEL / BELGE BİLEŞENİ === */
+.nc-image-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-sizing: border-box;
+  width: 100%;
+}
+.nc-image-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.nc-image-drop-area {
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f8fafc;
+}
+.nc-image-drop-area:hover, .nc-image-drop-area.drag-active {
+  border-color: var(--accent-primary);
+  background: #f0fdf4;
+}
+.nc-image-drop-area.has-image {
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+.nc-vault-img-preview {
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.nc-mini-del-img-btn {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nc-mini-del-img-btn:hover {
+  background: #ef4444;
+  color: white;
+}
+
 /* === YAZDIRMA VE PDF ÇIKTISI === */
 @media print {
   body, html, .app-container { height: auto; overflow: visible; background: #ffffff !important; color: #000000 !important; }
-  .app-header, .protected-view-banner, .sidebar-palette, .sidebar-inspector, .app-statusbar, .block-floating-toolbar, .nc-mask-toggle-btn, .resizer-handle, .nc-item-del-btn, .nc-add-action-btn, .nc-add-item-row, .nc-table-filter-input, .generate-pass-btn, .nc-mini-copy-btn, .nc-blur-toggle-btn, .block-resize-handle { display: none !important; }
+  .app-header, .protected-view-banner, .sidebar-palette, .sidebar-inspector, .app-statusbar, .block-floating-toolbar, .nc-mask-toggle-btn, .resizer-handle, .nc-item-del-btn, .nc-add-action-btn, .nc-add-item-row, .nc-table-filter-input, .generate-pass-btn, .nc-mini-copy-btn, .nc-blur-toggle-btn, .block-resize-handle, .rich-text-floating-toolbar { display: none !important; }
   .studio-workspace, .canvas-viewport { padding: 0 !important; overflow: visible !important; background: #ffffff !important; }
   .canvas-page-wrapper, .visual-canvas { width: 100% !important; max-width: 100% !important; box-shadow: none !important; padding: 0 !important; border: none !important; }
   .canvas-block { border: none !important; margin-bottom: 20px !important; page-break-inside: avoid; }

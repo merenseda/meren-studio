@@ -31,7 +31,7 @@ const COMPONENT_REGISTRY = [
     name: 'Günlük',
     category: 'main',
     icon: '📖',
-    description: 'Şimdiki zaman tarihli kişisel not ve günlük kartı',
+    description: 'Şimdiki zaman tarihli kişisel not ve zengin metinli günlük kartı',
     defaultData: {
       date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long', hour: '2-digit', minute: '2-digit' }),
       title: 'Günlük Başlığı',
@@ -82,23 +82,19 @@ const COMPONENT_REGISTRY = [
     }
   },
 
-  // 5. SAĞLIK BİLGİLERİ
+  // 5. ŞİFRELİ GÖRSEL / BELGE
   {
-    id: 'vault-health-card',
-    name: 'Sağlık Bilgileri',
+    id: 'vault-image-card',
+    name: 'Görsel / Belge',
     category: 'vault',
-    icon: '🏥',
-    description: 'Kan grubu, alerji, kronik durum ve acil irtibat kartı',
+    icon: '🖼️',
+    description: 'AES-256 şifreli resim, fatura, poliçe veya taranmış evrak kartı',
     defaultData: {
-      fullName: 'Ad Soyad',
-      bloodType: 'A Rh (+)',
-      allergies: '',
-      chronicConditions: '',
-      emergencyContact: '',
-      hospital: '',
-      bgColor: '#fef2f2',
-      borderColor: '#ef4444',
-      textColor: '#991b1b',
+      caption: 'Belge / Evrak Fotoğrafı',
+      imageData: '',
+      fit: 'contain',
+      maxHeight: 380,
+      bgColor: '#ffffff',
       padding: '20px',
       borderRadius: '12px'
     }

@@ -26,6 +26,21 @@
           </select>
           <span id="saveStatusDot" class="status-dot saved" title="Kaydedildi"></span>
         </div>
+
+        <!-- Geri Al / Yinele Butonları -->
+        <div class="history-btn-group">
+          <button id="btnUndo" class="action-btn icon-only" title="Geri Al (Ctrl+Z)"><span>↩️</span></button>
+          <button id="btnRedo" class="action-btn icon-only" title="Yinele (Ctrl+Y / Ctrl+Shift+Z)"><span>↪️</span></button>
+        </div>
+
+        <!-- Otomatik Kaydetme Anahtarı -->
+        <div class="auto-save-toggle-wrap" title="Dosya bir yere kayıtlıysa değişiklikleri otomatik olarak kaydeder">
+          <label class="switch">
+            <input type="checkbox" id="chkAutoSave">
+            <span class="slider-toggle round"></span>
+          </label>
+          <span class="auto-save-label">Oto. Kaydet</span>
+        </div>
       </div>
 
       <div class="header-right">
@@ -54,6 +69,17 @@
         </button>
       </div>
     </header>
+
+    <!-- Zengin Metin Biçimlendirme Araç Çubuğu (Floating Rich Text Toolbar) -->
+    <div class="rich-text-floating-toolbar" id="richTextToolbar" style="display: none;">
+      <button class="rich-btn" data-command="bold" title="Kalın (Ctrl+B)"><b>B</b></button>
+      <button class="rich-btn" data-command="italic" title="İtalik (Ctrl+I)"><i>I</i></button>
+      <button class="rich-btn" data-command="underline" title="Altı Çizili (Ctrl+U)"><u>U</u></button>
+      <button class="rich-btn" data-command="strikeThrough" title="Üstü Çizili"><s>S</s></button>
+      <span class="rich-divider"></span>
+      <button class="rich-btn" data-command="insertUnorderedList" title="Madde İşaretli Liste">• Liste</button>
+      <button class="rich-btn" data-command="removeFormat" title="Biçimi Temizle">🧹</button>
+    </div>
 
     <!-- Ctrl+F Sayfa İçi Arama Çubuğu -->
     <div class="search-floating-bar" id="searchFloatingBar" style="display: none;">

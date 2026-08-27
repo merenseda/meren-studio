@@ -131,23 +131,29 @@ class BlockInspector {
     const d = block.data || {};
     let inputsHtml = '';
 
+    if (block.componentId === 'vault-image-card') {
+      inputsHtml += `
+        <div class="control-group">
+          <label>Resim Yerleşimi</label>
+          <select class="insp-input" data-data-key="fit">
+            <option value="contain" ${d.fit === 'contain' ? 'selected' : ''}>Tam Sığdır (Contain)</option>
+            <option value="cover" ${d.fit === 'cover' ? 'selected' : ''}>Alanı Doldur (Cover)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Maksimum Yükseklik: <span>${d.maxHeight || 380}px</span></label>
+          <input type="range" class="slider" data-data-key="maxHeight" min="150" max="750" value="${d.maxHeight || 380}">
+        </div>
+      `;
+    }
+
     // Standart String & Number Alanları
     for (const key in d) {
-      if (['bgColor', 'bgGradient', 'textColor', 'padding', 'margin', 'borderRadius', 'shadow', 'backdropBlur', 'borderWidth', 'borderColor', 'items', 'steps', 'rows', 'headers'].includes(key)) {
+      if (['bgColor', 'bgGradient', 'textColor', 'padding', 'margin', 'borderRadius', 'shadow', 'backdropBlur', 'borderWidth', 'borderColor', 'items', 'steps', 'rows', 'headers', 'imageData', 'fit', 'maxHeight'].includes(key)) {
         continue;
       }
 
-      if (key === 'bloodType') {
-        const bloods = ['A Rh (+)', '0 Rh (+)', 'B Rh (+)', 'AB Rh (+)', 'A Rh (-)', '0 Rh (-)', 'B Rh (-)'];
-        inputsHtml += `
-          <div class="control-group">
-            <label>Kan Grubu</label>
-            <select class="insp-input" data-data-key="bloodType">
-              ${bloods.map(b => `<option value="${b}" ${d.bloodType === b ? 'selected' : ''}>${b}</option>`).join('')}
-            </select>
-          </div>
-        `;
-      } else if (typeof d[key] === 'string') {
+      if (typeof d[key] === 'string') {
         const label = this.formatFieldLabel(key);
         if (d[key].length > 40 || key === 'body' || key === 'notes') {
           inputsHtml += `
@@ -190,11 +196,7 @@ class BlockInspector {
       currency: 'Para Birimi',
       branchOrType: 'Hesap Türü',
       additionalAssets: 'Not',
-      fullName: 'Ad Soyad',
-      allergies: 'Alerjiler',
-      chronicConditions: 'Kronik / İlaç',
-      emergencyContact: 'Acil İrtibat Tel',
-      hospital: 'Tercih Edilen Hastane',
+      caption: 'Görsel Başlığı',
       date: 'Tarih',
       body: 'Günlük Metni'
     };

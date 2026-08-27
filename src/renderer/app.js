@@ -42,6 +42,7 @@
       engine.renderCanvas(visualCanvas, false);
       updateStats(blocks);
       setDirty(true);
+      triggerAutoSave();
     });
 
     // SAĞ PANEL BAŞLANGIÇTA İÇERİDE / KAPALI OLACAK
@@ -214,8 +215,83 @@
     resizerRight.addEventListener('dblclick', toggleRightSidebar);
   }
 
+  let autoSaveTimer = null;
+
+  function triggerAutoSave() {
+    const chkAutoSave = document.getElementById('chkAutoSave');
+    if (!chkAutoSave || !chkAutoSave.checked || !currentFilePath) return;
+
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      handleSaveFile(true);
+    }, 1800);
+  }
+
+  function setupRichTextToolbar() {
+    const toolbar = document.getElementById('richTextToolbar');
+    if (!toolbar) return;
+
+    toolbar.querySelectorAll('.rich-btn').forEach(btn => {
+      btn.onmousedown = (e) => {
+        e.preventDefault(); // Seçimin kaybolmasını engelle
+        const cmd = btn.dataset.command;
+        if (cmd) {
+          document.execCommand(cmd, false, null);
+        }
+      };
+    });
+
+    document.addEventListener('selectionchange', () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) {
+        toolbar.style.display = 'none';
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      const commonAncestor = range.commonAncestorContainer;
+      const element = commonAncestor.nodeType === Node.ELEMENT_NODE ? commonAncestor : commonAncestor.parentElement;
+
+      // Sadece tuval içindeki contenteditable veya düzenlenebilir alanlarda göster
+      if (!element || !element.closest('#visualCanvas') || !element.isContentEditable) {
+        toolbar.style.display = 'none';
+        return;
+      }
+
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        toolbar.style.display = 'none';
+        return;
+      }
+
+      toolbar.style.display = 'flex';
+      toolbar.style.top = `${window.scrollY + rect.top - 46}px`;
+      toolbar.style.left = `${window.scrollX + rect.left + (rect.width / 2) - 100}px`;
+    });
+  }
+
   function setupEventListeners() {
     setupSearchInPage();
+    setupRichTextToolbar();
+
+    const btnUndo = document.getElementById('btnUndo');
+    const btnRedo = document.getElementById('btnRedo');
+    const chkAutoSave = document.getElementById('chkAutoSave');
+
+    if (btnUndo) btnUndo.addEventListener('click', () => engine.undo());
+    if (btnRedo) btnRedo.addEventListener('click', () => engine.redo());
+
+    if (chkAutoSave) {
+      chkAutoSave.addEventListener('change', () => {
+        if (chkAutoSave.checked) {
+          if (!currentFilePath) {
+            engine.showToast('ℹ️ Otomatik kaydetme için önce dosyanızı bir kez kaydedin.');
+          } else {
+            engine.showToast('⚡ Otomatik kaydetme aktif!');
+          }
+        }
+      });
+    }
 
     componentSearch.addEventListener('input', (e) => {
       renderComponentPalette(e.target.value);
@@ -223,10 +299,12 @@
 
     docTitleInput.addEventListener('input', () => {
       setDirty(true);
+      triggerAutoSave();
     });
 
     docFormatSelect.addEventListener('change', () => {
       setDirty(true);
+      triggerAutoSave();
     });
 
     btnEnableEditing.addEventListener('click', () => {
@@ -235,7 +313,7 @@
 
     document.getElementById('btnNew').addEventListener('click', handleNewFile);
     document.getElementById('btnOpen').addEventListener('click', handleOpenFile);
-    document.getElementById('btnSave').addEventListener('click', handleSaveFile);
+    document.getElementById('btnSave').addEventListener('click', () => handleSaveFile(false));
     document.getElementById('btnSaveAs').addEventListener('click', handleSaveAsFile);
     document.getElementById('btnPrintPdf').addEventListener('click', handlePrintPdf);
   }
@@ -282,7 +360,7 @@
     setDirty(false);
   }
 
-  async function handleSaveFile() {
+  async function handleSaveFile(isAutoSave = false) {
     if (!window.merenAPI) return;
 
     const docData = engine.exportToDocument(docTitleInput.value.trim() || 'yeni meren dosyası');
@@ -298,9 +376,13 @@
       currentFilePath = res.filePath;
       filePathStatus.textContent = res.filePath;
       setDirty(false);
-      engine.showToast('💾 Dosya Başarıyla Kaydedildi!');
+      if (isAutoSave) {
+        engine.showToast('⚡ Otomatik Kaydedildi');
+      } else {
+        engine.showToast('💾 Dosya Başarıyla Kaydedildi!');
+      }
     } else if (res && res.error) {
-      alert('Kaydetme hatası: ' + res.error);
+      if (!isAutoSave) alert('Kaydetme hatası: ' + res.error);
     }
   }
 
@@ -475,7 +557,19 @@
 
   function setupShortcutKeys() {
     window.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if (isProtectedView) return;
+        e.preventDefault();
+        if (e.shiftKey) {
+          engine.redo();
+        } else {
+          engine.undo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        if (isProtectedView) return;
+        e.preventDefault();
+        engine.redo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         const searchFloatingBar = document.getElementById('searchFloatingBar');
         const canvasSearchInput = document.getElementById('canvasSearchInput');

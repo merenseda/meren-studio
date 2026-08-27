@@ -7,10 +7,48 @@ class NoCodeEngine {
     this.isReadOnly = false;
     this.tableFilters = {};
     this.draggedBlockId = null;
+    this.undoStack = [];
+    this.redoStack = [];
+    this.maxHistory = 40;
     this.listeners = {
       change: [],
       select: []
     };
+  }
+
+  pushHistoryState() {
+    if (this.isReadOnly) return;
+    this.undoStack.push(JSON.parse(JSON.stringify(this.blocks)));
+    if (this.undoStack.length > this.maxHistory) {
+      this.undoStack.shift();
+    }
+    this.redoStack = [];
+  }
+
+  undo() {
+    if (this.isReadOnly || this.undoStack.length === 0) {
+      this.showToast('ℹ️ Geri alınacak işlem yok');
+      return;
+    }
+    this.redoStack.push(JSON.parse(JSON.stringify(this.blocks)));
+    this.blocks = this.undoStack.pop();
+    this.selectedBlockId = this.blocks.length > 0 ? this.blocks[0].id : null;
+    this.emit('change', this.blocks);
+    this.emit('select', this.getSelectedBlock());
+    this.showToast('↩️ Geri Alındı');
+  }
+
+  redo() {
+    if (this.isReadOnly || this.redoStack.length === 0) {
+      this.showToast('ℹ️ Yenilenecek işlem yok');
+      return;
+    }
+    this.undoStack.push(JSON.parse(JSON.stringify(this.blocks)));
+    this.blocks = this.redoStack.pop();
+    this.selectedBlockId = this.blocks.length > 0 ? this.blocks[0].id : null;
+    this.emit('change', this.blocks);
+    this.emit('select', this.getSelectedBlock());
+    this.showToast('↪️ Yineleme Yapıldı');
   }
 
   on(event, callback) {
@@ -40,6 +78,8 @@ class NoCodeEngine {
     const compDef = COMPONENT_REGISTRY.find(c => c.id === componentId);
     if (!compDef) return null;
 
+    this.pushHistoryState();
+
     const blockId = 'block_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     const newBlock = {
       id: blockId,
@@ -64,6 +104,7 @@ class NoCodeEngine {
     if (this.isReadOnly) return;
     const idx = this.blocks.findIndex(b => b.id === blockId);
     if (idx !== -1) {
+      this.pushHistoryState();
       this.blocks.splice(idx, 1);
       if (this.selectedBlockId === blockId) {
         this.selectedBlockId = this.blocks.length > 0 ? this.blocks[Math.max(0, idx - 1)].id : null;
@@ -81,6 +122,7 @@ class NoCodeEngine {
     const targetIdx = idx + direction;
     if (targetIdx < 0 || targetIdx >= this.blocks.length) return;
 
+    this.pushHistoryState();
     const [item] = this.blocks.splice(idx, 1);
     this.blocks.splice(targetIdx, 0, item);
     this.emit('change', this.blocks);
@@ -91,6 +133,7 @@ class NoCodeEngine {
     if (this.isReadOnly) return;
     const block = this.blocks.find(b => b.id === blockId);
     if (block) {
+      this.pushHistoryState();
       block.rowId = 'row_' + block.id + '_' + Date.now();
       if (!block.customStyles) block.customStyles = {};
       block.customStyles.width = '100%';
@@ -106,6 +149,7 @@ class NoCodeEngine {
     const targetIdx = this.blocks.findIndex(b => b.id === targetId);
     if (srcIdx === -1 || targetIdx === -1) return;
 
+    this.pushHistoryState();
     const source = this.blocks[srcIdx];
     const target = this.blocks[targetIdx];
 
@@ -149,6 +193,7 @@ class NoCodeEngine {
     const idx = this.blocks.findIndex(b => b.id === blockId);
     if (idx === -1) return;
 
+    this.pushHistoryState();
     const source = this.blocks[idx];
     const newBlockId = 'block_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     const cloned = {
@@ -654,31 +699,30 @@ class NoCodeEngine {
           </div>
         `;
 
-      // 5. SAĞLIK VE ACİL İRTİBAT
-      case 'vault-health-card':
-        const bloodTypes = ['A Rh (+)', '0 Rh (+)', 'B Rh (+)', 'AB Rh (+)', 'A Rh (-)', '0 Rh (-)', 'B Rh (-)'];
-        const bloodChips = bloodTypes.map(bt => `
-          <button class="blood-chip ${d.bloodType === bt ? 'active' : ''}" data-set-blood="${bt}">${bt}</button>
-        `).join('');
-
+      // 5. ŞİFRELİ GÖRSEL / BELGE
+      case 'vault-image-card':
+        const hasImg = !!d.imageData;
         return `
-          <div class="nc-health-card" style="${inlineStyle}">
-            <div class="nc-health-top">
-              <span class="nc-health-icon">🏥</span>
-              <div>
-                <h3 data-bind="fullName">${d.fullName}</h3>
-                <div class="blood-chips-row">${bloodChips}</div>
+          <div class="nc-image-card" style="${inlineStyle}">
+            <div class="nc-image-header">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">🖼️</span>
+                <h4 data-bind="caption" style="margin:0; font-size:1.05rem;">${d.caption || 'Belge / Evrak'}</h4>
               </div>
+              ${hasImg ? `<button class="nc-mini-del-img-btn" data-action="remove-image" title="Görseli Kaldır">🗑️ Görseli Sil</button>` : ''}
             </div>
-            <div class="nc-health-grid">
-              <div><small>Alerjiler:</small> <p data-bind="allergies">${d.allergies || ''}</p></div>
-              <div><small>Kronik / İlaç:</small> <p data-bind="chronicConditions">${d.chronicConditions || ''}</p></div>
-            </div>
-            <div class="nc-emergency-contact-box">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>🚨 <strong>Acil İrtibat:</strong> <span data-bind="emergencyContact">${d.emergencyContact || ''}</span></div>
-                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.emergencyContact || '')}" title="Numarayı Kopyala">📞 Kopyala</button>
-              </div>
+
+            <div class="nc-image-drop-area ${hasImg ? 'has-image' : 'empty'}" data-action="upload-image">
+              ${hasImg ? `
+                <img src="${d.imageData}" alt="${escapeHtml(d.caption || '')}" style="max-height: ${d.maxHeight || 380}px; object-fit: ${d.fit || 'contain'}; width: 100%; border-radius: 8px; display: block;" class="nc-vault-img-preview">
+              ` : `
+                <div class="nc-img-upload-prompt">
+                  <span style="font-size:2.2rem; display:block; margin-bottom:6px;">📤</span>
+                  <strong>Görsel veya Taranmış Evrak Seçin</strong>
+                  <p style="font-size:0.8rem; color:#64748b; margin-top:4px;">Tıklayın veya buraya bir resim sürükleyip bırakın (PNG, JPG, WEBP)</p>
+                  <input type="file" accept="image/*" class="nc-hidden-file-input" style="display:none;">
+                </div>
+              `}
             </div>
           </div>
         `;
@@ -764,15 +808,56 @@ class NoCodeEngine {
       };
     });
 
-    // 3. Sağlık Kan Grubu Çipleri
-    containerEl.querySelectorAll('[data-set-blood]').forEach(btn => {
+    // 3. Görsel Yükleme & Sürükle-Bırak & Silme
+    containerEl.querySelectorAll('.nc-image-drop-area').forEach(dropArea => {
+      const blockWrap = dropArea.closest('.canvas-block');
+      const fileInput = dropArea.querySelector('.nc-hidden-file-input');
+
+      dropArea.onclick = (e) => {
+        if (e.target.closest('.nc-mini-del-img-btn')) return;
+        if (fileInput) fileInput.click();
+      };
+
+      if (fileInput) {
+        fileInput.onchange = (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (file) {
+            this.handleImageFileSelected(file, blockWrap.dataset.blockId);
+          }
+        };
+      }
+
+      dropArea.ondragover = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropArea.classList.add('drag-active');
+      };
+
+      dropArea.ondragleave = (e) => {
+        e.stopPropagation();
+        dropArea.classList.remove('drag-active');
+      };
+
+      dropArea.ondrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropArea.classList.remove('drag-active');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          this.handleImageFileSelected(e.dataTransfer.files[0], blockWrap.dataset.blockId);
+        }
+      };
+    });
+
+    containerEl.querySelectorAll('[data-action="remove-image"]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
         const blockWrap = btn.closest('.canvas-block');
         const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
         if (block) {
-          block.data.bloodType = btn.dataset.setBlood;
+          this.pushHistoryState();
+          block.data.imageData = '';
           this.emit('change', this.blocks);
+          this.showToast('🗑️ Görsel kaldırıldı');
         }
       };
     });
@@ -784,6 +869,7 @@ class NoCodeEngine {
         const blockWrap = btn.closest('.canvas-block');
         const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
         if (block) {
+          this.pushHistoryState();
           const nowStr = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long', hour: '2-digit', minute: '2-digit' });
           block.data.date = nowStr;
           this.emit('change', this.blocks);
@@ -832,6 +918,7 @@ class NoCodeEngine {
         const blockWrap = btn.closest('.canvas-block');
         const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
         if (block) {
+          this.pushHistoryState();
           if (!block.data.rows) block.data.rows = [];
           const colCount = (block.data.headers || ['1', '2', '3']).length;
           const newRow = new Array(colCount).fill('');
@@ -840,6 +927,25 @@ class NoCodeEngine {
         }
       };
     });
+  }
+
+  handleImageFileSelected(file, blockId) {
+    if (!file || !file.type.startsWith('image/')) {
+      alert('Lütfen geçerli bir resim veya taranmış evrak dosyası seçin (PNG, JPG, WEBP).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const block = this.blocks.find(b => b.id === blockId);
+      if (block) {
+        this.pushHistoryState();
+        block.data.imageData = event.target.result;
+        this.emit('change', this.blocks);
+        this.showToast('🖼️ Görsel şifrelenerek eklendi!');
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   showToast(message) {
