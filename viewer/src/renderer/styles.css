@@ -299,16 +299,36 @@ body, html {
 .empty-viewer-state h2 { color: #1e293b; font-size: 1.3rem; margin-bottom: 8px; }
 .empty-viewer-state code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #0f172a; font-family: var(--font-mono); }
 
-/* === GÖRSEL BİLEŞEN OKUMA STİLLERİ === */
+/* === GÖRSEL BİLEŞEN OKUMA STİLLERİ (TAŞMA ENGELLEMELİ) === */
+.nc-vault-card,
+.nc-emergency-box,
+.nc-financial-card,
+.nc-health-card,
+.nc-journal-card,
+.nc-secret-card,
+.nc-idea-card,
+.nc-vault-hero,
+.nc-glass-card,
+.nc-todo-widget,
+.nc-table-widget {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 .nc-vault-card { border: 1px solid #e2e8f0; border-radius: 12px; }
-.nc-vault-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.nc-vault-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
 .nc-vault-icon { font-size: 1.3rem; }
-.nc-vault-title { font-size: 1.15rem; color: #0f172a; margin: 0; }
-.nc-viewer-badge { background: #f1f5f9; color: #64748b; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
-.nc-vault-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; }
+.nc-vault-title { font-size: 1.15rem; color: #0f172a; margin: 0; word-break: break-word; }
+.nc-viewer-badge { background: #f1f5f9; color: #64748b; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
+.nc-vault-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 12px; min-width: 0; width: 100%; }
+.nc-field-group { min-width: 0; max-width: 100%; }
 .nc-field-label { display: block; font-size: 0.78rem; color: #64748b; margin-bottom: 2px; }
-.nc-field-value { font-size: 0.95rem; color: #1e293b; }
-.nc-inline-copy-row { display: flex; align-items: center; gap: 8px; }
+.nc-field-value { font-size: 0.95rem; color: #1e293b; word-break: break-word; overflow-wrap: anywhere; min-width: 0; }
+.nc-inline-copy-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; max-width: 100%; }
 
 .nc-mini-copy-btn {
   background: #f1f5f9;
@@ -320,11 +340,12 @@ body, html {
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
 .nc-mini-copy-btn:hover { background: #e2e8f0; color: #0f172a; }
 
-.nc-password-mask-row { display: flex; align-items: center; gap: 6px; }
-.nc-masked-text { font-family: var(--font-mono); font-size: 1.05rem; color: #4338ca; font-weight: bold; }
+.nc-password-mask-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.nc-masked-text { font-family: var(--font-mono); font-size: 1.05rem; color: #4338ca; font-weight: bold; word-break: break-all; }
 .nc-mask-toggle-btn {
   background: #ede9fe;
   border: 1px solid #c7d2fe;
@@ -334,28 +355,29 @@ body, html {
   padding: 2px 7px;
   border-radius: 4px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 .nc-mask-toggle-btn:hover { background: #ddd6fe; }
-.nc-vault-notes { background: #f8fafc; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; color: #475569; border-left: 3px solid #0284c7; }
+.nc-vault-notes { background: #f8fafc; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; color: #475569; border-left: 3px solid #0284c7; word-break: break-word; }
 
 /* Acil Durum */
 .nc-emergency-box { background: #fffbeb; border-left: 5px solid #f59e0b; border-radius: 10px; }
-.nc-emergency-title { font-size: 1.15rem; color: #92400e; margin: 0; }
-.nc-urgency-pill { background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 10px; border: 1px solid #fcd34d; }
-.nc-steps-container { margin-top: 10px; }
-.nc-step-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.nc-emergency-title { font-size: 1.15rem; color: #92400e; margin: 0; word-break: break-word; }
+.nc-urgency-pill { background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 10px; border: 1px solid #fcd34d; flex-shrink: 0; }
+.nc-steps-container { margin-top: 10px; max-width: 100%; }
+.nc-step-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; min-width: 0; max-width: 100%; }
 .nc-step-num { font-weight: bold; color: #92400e; min-width: 18px; }
-.nc-step-text { flex: 1; font-size: 0.92rem; color: #78350f; line-height: 1.5; }
+.nc-step-text { flex: 1; font-size: 0.92rem; color: #78350f; line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; min-width: 0; }
 
 /* Finans */
 .nc-financial-card { border: 1px solid #e2e8f0; border-radius: 12px; }
-.nc-financial-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.nc-financial-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
 .nc-fin-icon { font-size: 1.3rem; }
-.nc-currency-badge { background: #ede9fe; color: #4f46e5; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
-.nc-iban-box { background: #f1f5f9; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; }
+.nc-currency-badge { background: #ede9fe; color: #4f46e5; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; flex-shrink: 0; }
+.nc-iban-box { background: #f1f5f9; padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; max-width: 100%; box-sizing: border-box; overflow: hidden; }
 .nc-iban-label { display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 2px; }
-.nc-iban-code { font-family: var(--font-mono); font-weight: bold; font-size: 1rem; color: #0f172a; letter-spacing: 0.5px; }
-.nc-fin-details { font-size: 0.85rem; color: #475569; }
+.nc-iban-code { font-family: var(--font-mono); font-weight: bold; font-size: 0.95rem; color: #0f172a; letter-spacing: 0.5px; word-break: break-all; display: block; max-width: 100%; }
+.nc-fin-details { font-size: 0.85rem; color: #475569; word-break: break-word; }
 
 /* Sağlık */
 .nc-health-card { background: #fef2f2; border-left: 5px solid #ef4444; border-radius: 12px; }

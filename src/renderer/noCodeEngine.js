@@ -129,6 +129,19 @@ class NoCodeEngine {
       return;
     }
     this.selectedBlockId = blockId;
+
+    // DOM üzerindeki .selected sınıflarını tuvali yıkmadan anında ve akıcı güncelle
+    const canvas = document.getElementById('visualCanvas');
+    if (canvas) {
+      canvas.querySelectorAll('.canvas-block').forEach(b => {
+        if (b.dataset.blockId === blockId) {
+          b.classList.add('selected');
+        } else {
+          b.classList.remove('selected');
+        }
+      });
+    }
+
     this.emit('select', this.getSelectedBlock());
   }
 
@@ -251,16 +264,30 @@ class NoCodeEngine {
 
       blockWrap.appendChild(contentEl);
 
-      // Seçim
+      // Seçim (Akıcı ve Çakışmasız)
       if (allowEditing) {
-        blockWrap.onclick = (e) => {
-          e.stopPropagation();
-          this.selectBlock(block.id);
-        };
+        blockWrap.addEventListener('mousedown', (e) => {
+          if (!e.target.closest('.action-mini-btn') && !e.target.closest('.block-resize-handle')) {
+            this.selectBlock(block.id);
+          }
+        });
       }
 
       containerEl.appendChild(blockWrap);
     });
+
+    // Sayfa içinde boş bir yere tıklandığında seçimi kaldır
+    if (allowEditing && !this._emptyAreaListenerAdded) {
+      this._emptyAreaListenerAdded = true;
+      const viewport = document.getElementById('canvasViewport');
+      if (viewport) {
+        viewport.addEventListener('mousedown', (e) => {
+          if (!e.target.closest('.canvas-block') && !e.target.closest('.sidebar-inspector') && !e.target.closest('.sidebar-palette') && !e.target.closest('.app-header')) {
+            this.selectBlock(null);
+          }
+        });
+      }
+    }
 
     this.attachInteractiveBehaviors(containerEl);
     if (allowEditing) {
