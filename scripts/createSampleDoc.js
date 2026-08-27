@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { packAndEncryptHrav } = require('../src/merenEngine');
+const { packAndEncryptHrav, MAGIC_HRAV, MAGIC_MEREN_V1 } = require('../src/merenEngine');
 
 const sampleDoc = {
   version: '2.0',
@@ -11,7 +11,7 @@ const sampleDoc = {
       componentId: 'hero-vault-header',
       data: {
         title: '💎 Kişisel Kasa & Acil Durum Rehberi',
-        subtitle: 'Bu dokümandaki tüm veriler AES-256-GCM ile şifrelenmiştir ve yalnızca Meren Studio ile açılabilir.',
+        subtitle: 'Bu dokümandaki tüm veriler AES-256-GCM ile şifrelenmiştir ve yalnızca Meren Studio / Viewer ile açılabilir.',
         bgGradient: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
         textColor: '#ffffff',
         padding: '36px',
@@ -59,7 +59,7 @@ const sampleDoc = {
         items: [
           { text: 'Yıllık banka şifrelerini ve kurtarma kodlarını güncelle', checked: true },
           { text: 'Fiziksel evrakların yedeklerini kontrol et', checked: false },
-          { text: 'Güvenli dijital kasayı .hrav olarak kaydet', checked: true }
+          { text: 'Güvenli dijital kasayı .hrav ve .meren olarak kaydet', checked: true }
         ],
         bgColor: '#ffffff',
         padding: '20px',
@@ -79,35 +79,6 @@ const sampleDoc = {
         padding: '28px',
         borderRadius: '14px',
         shadow: '0 8px 20px -4px rgba(0,0,0,0.06)'
-      }
-    },
-    {
-      id: 'block_secret',
-      componentId: 'secret-note-card',
-      data: {
-        tag: '🔒 Çok Gizli',
-        note: 'Gelecekte hatırlamak istediğim kişisel manifesto ve kararlarım buraya not edilmiştir.',
-        isBlurred: true,
-        bgColor: '#f8fafc',
-        textColor: '#334155',
-        padding: '22px',
-        borderRadius: '12px'
-      }
-    },
-    {
-      id: 'block_table',
-      componentId: 'vault-info-table',
-      data: {
-        title: 'Kurum ve Hesap Bilgileri',
-        headers: ['Kurum / Hizmet', 'Kullanıcı / No', 'Detay'],
-        rows: [
-          ['E-Devlet', 'TC Kimlik No', '2FA SMS ile bağlı'],
-          ['Kripto Donanım Cüzdanı', 'Ledger Nano', 'Kurtarma kelimeleri kasada'],
-          ['Bireysel Emeklilik (BES)', 'Poliçe No: 441029', 'Vefat tazminatı mevcut']
-        ],
-        bgColor: '#ffffff',
-        padding: '16px',
-        borderRadius: '10px'
       }
     },
     {
@@ -145,12 +116,17 @@ const sampleDoc = {
   html: '',
   css: '',
   js: '',
-  metadata: { builder: 'MerenStudio-Vault' }
+  metadata: { builder: 'MerenSuite' }
 };
 
-const encrypted = packAndEncryptHrav(sampleDoc);
-const targetPath = path.join(__dirname, '..', 'ornek_belge.hrav');
-fs.writeFileSync(targetPath, encrypted);
+// 1. .hrav dosyası oluştur
+const encryptedHrav = packAndEncryptHrav(sampleDoc, MAGIC_HRAV);
+const targetPathHrav = path.join(__dirname, '..', 'ornek_belge.hrav');
+fs.writeFileSync(targetPathHrav, encryptedHrav);
+console.log('✓ "ornek_belge.hrav" oluşturuldu: ' + targetPathHrav);
 
-console.log('✓ "ornek_belge.hrav" tam etkileşimli Kasa & Günlük formatında oluşturuldu: ' + targetPath);
-console.log('✓ Boyut: ' + encrypted.length + ' bayt');
+// 2. .meren dosyası oluştur
+const encryptedMeren = packAndEncryptHrav(sampleDoc, MAGIC_MEREN_V1);
+const targetPathMeren = path.join(__dirname, '..', 'ornek_belge.meren');
+fs.writeFileSync(targetPathMeren, encryptedMeren);
+console.log('✓ "ornek_belge.meren" oluşturuldu: ' + targetPathMeren);

@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-// Özel Dosya İmzaları (Hem .hrav hem de .meren formatlarını destekler)
+// Özel Dosya İmzaları (.hrav ve .meren)
 const MAGIC_HRAV = Buffer.from('HRAV_V1\0', 'utf-8'); // 8 bayt
 const MAGIC_MEREN_V1 = Buffer.from('MEREN_V1', 'utf-8'); // 8 bayt
 const MAGIC_MEREN_V2 = Buffer.from('MEREN_V2', 'utf-8'); // 8 bayt
@@ -13,51 +13,8 @@ const HEADER_LENGTH = 8 + SALT_LENGTH + IV_LENGTH + TAG_LENGTH; // 52 bayt
 // Dahili Uygulama Anahtarı (Master Secret)
 const APP_SECRET = 'MerenStudio#SecureEncryptedFormat@2026!7x9K$qL';
 
-/**
- * Tuz (Salt) ve Uygulama Anahtarından AES-256 anahtarı türetir (PBKDF2)
- */
 function deriveKey(salt) {
   return crypto.pbkdf2Sync(APP_SECRET, salt, 100000, 32, 'sha256');
-}
-
-/**
- * Verilen doküman verisini şifreleyip .hrav ikili (binary) Buffer'ı oluşturur.
- * @param {Object} documentData - { title, blocks, html, css, js, metadata }
- * @param {Buffer} magic - Varsayılan MAGIC_HRAV
- * @returns {Buffer} Şifrelenmiş dosya içeriği
- */
-function packAndEncryptHrav(documentData, magic = MAGIC_HRAV) {
-  const payload = {
-    version: documentData.version || '2.0',
-    title: documentData.title || 'Yeni Doküman',
-    createdAt: documentData.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    blocks: documentData.blocks || [],
-    html: documentData.html || '',
-    css: documentData.css || '',
-    js: documentData.js || '',
-    metadata: documentData.metadata || {}
-  };
-
-  const jsonString = JSON.stringify(payload);
-  const plaintextBuffer = Buffer.from(jsonString, 'utf-8');
-
-  // Kriptografik rastgele tuz ve IV
-  const salt = crypto.randomBytes(SALT_LENGTH);
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const key = deriveKey(salt);
-
-  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-  const ciphertext = Buffer.concat([cipher.update(plaintextBuffer), cipher.final()]);
-  const authTag = cipher.getAuthTag();
-
-  return Buffer.concat([
-    magic,
-    salt,
-    iv,
-    authTag,
-    ciphertext
-  ]);
 }
 
 /**
@@ -111,12 +68,12 @@ function decryptAndUnpackHrav(fileBuffer) {
     docData.formatType = formatType;
     return docData;
   } catch (err) {
-    throw new Error('Dosya şifresi çözülemedi! Dosya bozulmuş veya şifresi değiştirilmiş olabilir.');
+    throw new Error('Dosya şifresi çözülemedi! Dosya bozulmuş veya anahtarı uyuşmuyor.');
   }
 }
 
 /**
- * Dokümanı tek parça standart HTML çıktısına dönüştürür (Export için).
+ * Standart HTML olarak dışa aktarma (Export)
  */
 function exportToStandardHtml(documentData) {
   const title = documentData.title || 'Doküman';
@@ -170,7 +127,6 @@ function escapeHtml(text) {
 }
 
 module.exports = {
-  packAndEncryptHrav,
   decryptAndUnpackHrav,
   exportToStandardHtml,
   MAGIC_HRAV,

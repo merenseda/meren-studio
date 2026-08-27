@@ -1,14 +1,15 @@
 {
-  "name": "meren-studio",
+  "name": "meren-studio-suite",
   "version": "2.0.0",
-  "description": "Meren Studio - No-Code Görsel Web Tasarımcısı ve Güvenli .hrav Editörü",
+  "description": "Meren Suite - Meren Studio (No-Code Editör) ve Meren Viewer (Salt Okunur Görüntüleyici)",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "start:viewer": "electron viewer/src/main.js",
     "test": "node test/testEngine.js",
-    "pack": "electron-builder --dir",
-    "dist:setup": "electron-builder --win nsis",
-    "dist:portable": "electron-builder --win portable"
+    "dist:studio": "electron-builder --win nsis",
+    "dist:viewer": "electron-builder --win nsis -c.directories.app=viewer -c.directories.output=dist/viewer -c.productName=\"Meren Viewer\" -c.appId=com.meren.viewer -c.nsis.artifactName=\"MerenViewer-Setup-1.0.0.exe\"",
+    "dist:all": "npm run dist:studio && npm run dist:viewer"
   },
   "build": {
     "appId": "com.meren.studio",
@@ -29,6 +30,12 @@
           "ext": "hrav",
           "name": "Hrav Şifreli Dokümanı",
           "description": "Meren Studio No-Code Güvenli Dokümanı",
+          "role": "Editor"
+        },
+        {
+          "ext": "meren",
+          "name": "Meren Şifreli Dokümanı",
+          "description": "Meren Studio Güvenli Dokümanı",
           "role": "Editor"
         }
       ]
@@ -53,9 +60,9 @@
     "meren",
     "no-code",
     "hrav",
+    "meren-viewer",
     "encryption",
-    "aes-256",
-    "visual-builder"
+    "aes-256"
   ],
   "author": "Meren",
   "license": "MIT",

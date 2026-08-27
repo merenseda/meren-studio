@@ -1,0 +1,71 @@
+{
+  "name": "meren-viewer",
+  "version": "1.0.0",
+  "description": "Meren Viewer - Şifreli .hrav ve .meren Doküman Görüntüleyicisi (Salt Okunur)",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist:setup": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.meren.viewer",
+    "productName": "Meren Viewer",
+    "electronVersion": "40.10.6",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "fileAssociations": [
+        {
+          "ext": "hrav",
+          "name": "Hrav Şifreli Dokümanı",
+          "description": "Meren Şifreli Dokümanı",
+          "role": "Viewer"
+        },
+        {
+          "ext": "meren",
+          "name": "Meren Şifreli Dokümanı",
+          "description": "Meren Şifreli Dokümanı",
+          "role": "Viewer"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Meren Viewer",
+      "artifactName": "MerenViewer-Setup-${version}.exe",
+      "uninstallDisplayName": "Meren Viewer Kaldır"
+    },
+    "portable": {
+      "artifactName": "MerenViewer-Portable.exe"
+    },
+    "files": [
+      "src/**/*"
+    ]
+  },
+  "keywords": [
+    "meren",
+    "viewer",
+    "hrav",
+    "encryption",
+    "reader"
+  ],
+  "author": "Meren",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "40.10.6",
+    "electron-builder": "^26.15.3"
+  }
+}

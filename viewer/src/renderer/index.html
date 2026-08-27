@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meren Viewer - Şifreli Doküman Görüntüleyici</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="viewer-app-container">
+    
+    <!-- Üst Başlık & Araç Çubuğu -->
+    <header class="viewer-header">
+      <div class="header-left">
+        <div class="brand-badge">
+          <span class="brand-icon">👁️</span>
+          <span class="brand-text">Meren <strong>Viewer</strong></span>
+          <span class="format-pill" id="formatBadge">Salt Okunur</span>
+        </div>
+        <div class="doc-title-box">
+          <span id="docTitleText" class="doc-title-text">Doküman Seçilmedi</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Arama Butonu -->
+        <button id="btnToggleSearch" class="viewer-btn" title="Doküman İçinde Ara (Ctrl+F)">
+          <span>🔍</span> Ara
+        </button>
+
+        <!-- Yakınlaştırma (Zoom) -->
+        <div class="zoom-controls">
+          <button id="btnZoomOut" class="zoom-btn" title="Küçült (Ctrl+-)">➖</button>
+          <span id="zoomLevelText" class="zoom-level">100%</span>
+          <button id="btnZoomIn" class="zoom-btn" title="Büyüt (Ctrl++)">➕</button>
+          <button id="btnZoomReset" class="zoom-btn" title="Sıfırla">↺</button>
+        </div>
+
+        <!-- Dosya Eylemleri -->
+        <button id="btnOpen" class="viewer-btn primary" title="Şifreli Doküman Aç (.hrav / .meren) (Ctrl+O)">
+          <span>📂</span> Dosya Aç
+        </button>
+        <button id="btnPrint" class="viewer-btn" title="Yazdır veya PDF Olarak Kaydet (Ctrl+P)">
+          <span>🖨️</span> Yazdır / PDF
+        </button>
+        <button id="btnExportHtml" class="viewer-btn outline" title="Standart HTML Olarak Dışa Aktar">
+          <span>🌐</span> HTML Export
+        </button>
+      </div>
+    </header>
+
+    <!-- Yüzen Doküman İçi Arama Çubuğu (Ctrl+F) -->
+    <div class="search-floating-bar" id="searchFloatingBar" style="display: none;">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="docSearchInput" placeholder="Dokümanda kelime veya bilgi ara...">
+      <span id="searchResultsCount" class="search-count"></span>
+      <button id="btnCloseSearch" class="search-close-btn" title="Aramayı Kapat">✕</button>
+    </div>
+
+    <!-- Ana Doküman Okuma Alanı (Viewport) -->
+    <main class="viewer-viewport" id="viewerDropZone">
+      <div class="viewer-canvas-wrapper" id="viewerCanvasWrapper">
+        <div class="viewer-canvas" id="viewerCanvas">
+          <!-- Dinamik Olarak viewerRenderer.js ile Doldurulur -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Alt Durum Çubuğu -->
+    <footer class="viewer-statusbar">
+      <div class="statusbar-left">
+        <span class="status-badge secure">
+          <span>🔒</span> AES-256-GCM (.hrav & .meren Korumalı)
+        </span>
+        <span class="status-item" id="filePathStatus">Lütfen bir dosya açın veya sürükleyin</span>
+      </div>
+      <div class="statusbar-right">
+        <span class="status-item" id="fileFormatStatus">Format: -</span>
+        <span class="status-item" id="fileSizeStatus">Boyut: 0 B</span>
+        <span class="status-item readonly-status">🛡️ Salt Okunur (Görüntüleme)</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="viewerRenderer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
