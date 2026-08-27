@@ -1,11 +1,12 @@
-// Meren Studio - No-Code Kasa ve Günlük Tuval Motoru (Tam Etkileşimli)
+// Meren Studio - No-Code Kasa ve Günlük Tuval Motoru (Sürükleme & Boyutlandırma Destekli)
 
 class NoCodeEngine {
   constructor() {
     this.blocks = [];
     this.selectedBlockId = null;
     this.isReadOnly = false;
-    this.tableFilters = {}; // blockId -> filterQuery
+    this.tableFilters = {};
+    this.draggedBlockId = null;
     this.listeners = {
       change: [],
       select: []
@@ -84,6 +85,24 @@ class NoCodeEngine {
     this.emit('change', this.blocks);
   }
 
+  // Sürükle ve Bırak ile Yeniden Sıralama (Drag Reorder)
+  reorderBlock(sourceId, targetId, placeBefore = true) {
+    if (this.isReadOnly || sourceId === targetId) return;
+    const srcIdx = this.blocks.findIndex(b => b.id === sourceId);
+    if (srcIdx === -1) return;
+
+    const [item] = this.blocks.splice(srcIdx, 1);
+    let targetIdx = this.blocks.findIndex(b => b.id === targetId);
+    if (targetIdx === -1) {
+      this.blocks.push(item);
+    } else {
+      if (!placeBefore) targetIdx++;
+      this.blocks.splice(targetIdx, 0, item);
+    }
+    this.selectBlock(sourceId);
+    this.emit('change', this.blocks);
+  }
+
   duplicateBlock(blockId) {
     if (this.isReadOnly) return;
     const idx = this.blocks.findIndex(b => b.id === blockId);
@@ -136,7 +155,6 @@ class NoCodeEngine {
     }
   }
 
-  // Güçlü Rastgele Şifre Üretici
   generateStrongPassword(length = 16) {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|';
     let pass = '';
@@ -155,9 +173,9 @@ class NoCodeEngine {
     if (this.blocks.length === 0) {
       containerEl.innerHTML = `
         <div class="empty-canvas-state">
-          <div class="empty-icon">🛡️</div>
-          <h3>Kişisel Kasanız ve Günlüğünüz Boş</h3>
-          <p>Sol paneldeki Kasa veya Günlük bileşenlerine tıklayarak bilgilerinizi güvenle eklemeye başlayın.</p>
+          <div class="empty-icon" style="font-size: 3rem; margin-bottom: 12px; opacity: 0.7;">✨</div>
+          <h3 style="color: #1e293b; font-size: 1.25rem; margin-bottom: 6px;">Boş Çalışma Alanı</h3>
+          <p style="color: #64748b; font-size: 0.9rem;">Sol menüden istediğiniz bileşene tıklayarak sayfanızı oluşturmaya başlayın.</p>
         </div>
       `;
       return;
@@ -170,11 +188,16 @@ class NoCodeEngine {
       blockWrap.className = 'canvas-block' + (block.id === this.selectedBlockId && allowEditing ? ' selected' : '') + (this.isReadOnly ? ' read-only-mode' : '');
       blockWrap.dataset.blockId = block.id;
 
-      // Hızlı Kontrol Çubuğu
+      if (block.customStyles && block.customStyles.width) {
+        blockWrap.style.width = block.customStyles.width;
+      }
+
+      // Hızlı Kontrol Çubuğu & Taşıma Tutamacı
       if (allowEditing) {
         const toolbar = document.createElement('div');
         toolbar.className = 'block-floating-toolbar';
         toolbar.innerHTML = `
+          <button class="action-mini-btn drag-handle" title="Sürükleyip Sırasını Değiştirin" draggable="true">⋮⋮</button>
           <button class="action-mini-btn btn-up" title="Yukarı Taşı" ${index === 0 ? 'disabled' : ''}>⬆️</button>
           <button class="action-mini-btn btn-down" title="Aşağı Taşı" ${index === this.blocks.length - 1 ? 'disabled' : ''}>⬇️</button>
           <button class="action-mini-btn btn-duplicate" title="Çoğalt">📋</button>
@@ -187,6 +210,17 @@ class NoCodeEngine {
         toolbar.querySelector('.btn-delete').onclick = (e) => { e.stopPropagation(); this.removeBlock(block.id); };
 
         blockWrap.appendChild(toolbar);
+
+        // Kenar Boyutlandırma Tutamaçları (Resize Handles)
+        const resizeHandleRight = document.createElement('div');
+        resizeHandleRight.className = 'block-resize-handle block-resize-handle-right';
+        resizeHandleRight.title = 'Genişliği Ayarla (Sürükleyin)';
+        blockWrap.appendChild(resizeHandleRight);
+
+        const resizeHandleBottom = document.createElement('div');
+        resizeHandleBottom.className = 'block-resize-handle block-resize-handle-bottom';
+        resizeHandleBottom.title = 'İç Boşluğu Ayarla (Sürükleyin)';
+        blockWrap.appendChild(resizeHandleBottom);
       }
 
       // İçerik Alanı
@@ -203,7 +237,6 @@ class NoCodeEngine {
             const field = editable.dataset.bind;
             block.data[field] = editable.innerText;
             
-            // Eğer günlük yazısıysa kelime sayacını anında güncelle
             if (block.componentId === 'journal-entry-card') {
               const counter = blockWrap.querySelector('.nc-journal-counter');
               if (counter) {
@@ -230,6 +263,127 @@ class NoCodeEngine {
     });
 
     this.attachInteractiveBehaviors(containerEl);
+    if (allowEditing) {
+      this.attachDragAndResizeListeners(containerEl);
+    }
+  }
+
+  // Sürükle-Bırak Sıralama ve Kenardan Boyutlandırma Olayları
+  attachDragAndResizeListeners(containerEl) {
+    // 1. Sürükle ve Sıralama (Drag and drop reordering)
+    const blocks = containerEl.querySelectorAll('.canvas-block');
+
+    blocks.forEach(blockEl => {
+      const dragHandle = blockEl.querySelector('.drag-handle');
+      if (dragHandle) {
+        dragHandle.addEventListener('dragstart', (e) => {
+          this.draggedBlockId = blockEl.dataset.blockId;
+          blockEl.classList.add('is-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', this.draggedBlockId);
+        });
+
+        dragHandle.addEventListener('dragend', () => {
+          blockEl.classList.remove('is-dragging');
+          blocks.forEach(b => b.classList.remove('drag-over-top', 'drag-over-bottom'));
+          this.draggedBlockId = null;
+        });
+      }
+
+      blockEl.addEventListener('dragover', (e) => {
+        if (!this.draggedBlockId || this.draggedBlockId === blockEl.dataset.blockId) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        const rect = blockEl.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (e.clientY < midY) {
+          blockEl.classList.add('drag-over-top');
+          blockEl.classList.remove('drag-over-bottom');
+        } else {
+          blockEl.classList.add('drag-over-bottom');
+          blockEl.classList.remove('drag-over-top');
+        }
+      });
+
+      blockEl.addEventListener('dragleave', () => {
+        blockEl.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+
+      blockEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!this.draggedBlockId || this.draggedBlockId === blockEl.dataset.blockId) return;
+
+        const isTop = blockEl.classList.contains('drag-over-top');
+        blockEl.classList.remove('drag-over-top', 'drag-over-bottom');
+        this.reorderBlock(this.draggedBlockId, blockEl.dataset.blockId, isTop);
+      });
+    });
+
+    // 2. Kenardan Boyutlandırma (Resize handles dragging)
+    containerEl.querySelectorAll('.block-resize-handle-right').forEach(handle => {
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const blockEl = handle.closest('.canvas-block');
+        const blockId = blockEl.dataset.blockId;
+        const initialWidth = blockEl.offsetWidth;
+        const startX = e.clientX;
+
+        const onMouseMove = (moveEvent) => {
+          const deltaX = moveEvent.clientX - startX;
+          let newWidth = initialWidth + deltaX;
+          const containerWidth = containerEl.offsetWidth;
+          if (newWidth < 220) newWidth = 220;
+          if (newWidth > containerWidth) newWidth = containerWidth;
+          blockEl.style.width = newWidth + 'px';
+        };
+
+        const onMouseUp = () => {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          const finalWidth = blockEl.style.width;
+          this.updateBlockStyle(blockId, 'width', finalWidth);
+        };
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+    });
+
+    containerEl.querySelectorAll('.block-resize-handle-bottom').forEach(handle => {
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const blockEl = handle.closest('.canvas-block');
+        const blockId = blockEl.dataset.blockId;
+        const startY = e.clientY;
+        const block = this.blocks.find(b => b.id === blockId);
+        const initialPadding = parseInt((block.customStyles && block.customStyles.padding) || (block.data && block.data.padding) || 20);
+
+        const onMouseMove = (moveEvent) => {
+          const deltaY = moveEvent.clientY - startY;
+          let newPad = initialPadding + Math.round(deltaY / 2);
+          if (newPad < 6) newPad = 6;
+          if (newPad > 80) newPad = 80;
+          const contentArea = blockEl.querySelector('.nc-vault-card, .nc-emergency-box, .nc-financial-card, .nc-health-card, .nc-journal-card, .nc-secret-card, .nc-idea-card, .nc-vault-hero, .nc-glass-card, .nc-todo-widget, .nc-table-widget');
+          if (contentArea) contentArea.style.padding = newPad + 'px';
+        };
+
+        const onMouseUp = (upEvent) => {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          const deltaY = upEvent.clientY - startY;
+          let finalPad = initialPadding + Math.round(deltaY / 2);
+          if (finalPad < 6) finalPad = 6;
+          if (finalPad > 80) finalPad = 80;
+          this.updateBlockStyle(blockId, 'padding', finalPad + 'px');
+        };
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+    });
   }
 
   // Bileşen HTML Üretimi
@@ -386,7 +540,7 @@ class NoCodeEngine {
           </div>
         `;
 
-      // 6. GİZLİ KİŞİSEL NOT (BLUR PERDE KORUMASI)
+      // 6. GİZLİ KİŞİSEL NOT
       case 'secret-note-card':
         return `
           <div class="nc-secret-card" style="${inlineStyle}">
@@ -444,7 +598,7 @@ class NoCodeEngine {
       case 'vault-divider':
         return `<hr style="border: none; border-top: 1px solid ${d.lineColor || '#e2e8f0'}; margin: ${d.margin || '20px'} 0;">`;
 
-      // 11. GÖREV / HEDEF LİSTESİ (KALICI VE DİNAMİK)
+      // 11. GÖREV / HEDEF LİSTESİ
       case 'vault-todo-list':
         const items = d.items || [];
         const completedCount = items.filter(it => it.checked).length;
@@ -479,7 +633,7 @@ class NoCodeEngine {
           </div>
         `;
 
-      // 12. KRİTİK BİLGİ TABLOSU (DİNAMİK ARAMA VE SATIR EKLEME)
+      // 12. KRİTİK BİLGİ TABLOSU
       case 'vault-info-table':
         const headers = d.headers || ['Kurum / Hizmet', 'Kullanıcı / No', 'Detay'];
         const rows = d.rows || [];
@@ -522,7 +676,6 @@ class NoCodeEngine {
     }
   }
 
-  // İnteraktif Olaylar ve Buton Davranışları
   attachInteractiveBehaviors(containerEl) {
     // 1. Şifre Maskeleme / Göster - Gizle
     containerEl.querySelectorAll('[data-toggle-mask]').forEach(btn => {
@@ -545,7 +698,7 @@ class NoCodeEngine {
       };
     });
 
-    // 2. Panoya Kopyalama (Clipboard Copy)
+    // 2. Panoya Kopyalama
     containerEl.querySelectorAll('[data-copy-text]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
@@ -572,7 +725,7 @@ class NoCodeEngine {
       };
     });
 
-    // 4. Todo Checklist İşaretleme (KALICI STATE)
+    // 4. Todo Checklist İşaretleme
     containerEl.querySelectorAll('.nc-todo-row input[type="checkbox"]').forEach(chk => {
       chk.onchange = (e) => {
         e.stopPropagation();
@@ -809,7 +962,7 @@ class NoCodeEngine {
     }, 2200);
   }
 
-  exportToDocument(title = 'Meren Kişisel Kasa & Günlük') {
+  exportToDocument(title = 'yeni meren dosyası') {
     let combinedHtml = '';
     this.blocks.forEach(b => {
       combinedHtml += `<div class="meren-rendered-block" id="${b.id}">\n${this.generateBlockHtml(b)}\n</div>\n`;
@@ -822,20 +975,16 @@ class NoCodeEngine {
       html: combinedHtml,
       css: '',
       js: '',
-      metadata: { builder: 'MerenStudio-Vault', timestamp: new Date().toISOString() }
+      metadata: { builder: 'MerenStudio', timestamp: new Date().toISOString() }
     };
   }
 
   loadFromDocument(doc) {
-    if (doc.blocks && Array.isArray(doc.blocks) && doc.blocks.length > 0) {
+    if (doc.blocks && Array.isArray(doc.blocks)) {
       this.blocks = doc.blocks;
     } else {
+      // Program ilk açıldığında veya yeni dosya istendiğinde sayfa TAMAMEN BOŞ başlar!
       this.blocks = [];
-      this.addComponent('hero-vault-header');
-      this.addComponent('vault-emergency-instructions');
-      this.addComponent('vault-password-card');
-      this.addComponent('journal-entry-card');
-      this.addComponent('vault-health-card');
     }
     this.selectedBlockId = this.blocks.length > 0 ? this.blocks[0].id : null;
     this.emit('change', this.blocks);

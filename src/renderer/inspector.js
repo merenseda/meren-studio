@@ -74,9 +74,9 @@ class BlockInspector {
           </div>
 
           <div class="presets-row">
-            <span class="preset-chip" data-gradient="linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)" title="Koyu Lacivert"></span>
-            <span class="preset-chip" data-gradient="linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" title="Mor Gradyan"></span>
-            <span class="preset-chip" data-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)" title="Koyu Gece"></span>
+            <span class="preset-chip" data-gradient="linear-gradient(135deg, #0b0f19 0%, #1e293b 100%)" title="Koyu Grafit"></span>
+            <span class="preset-chip" data-gradient="linear-gradient(135deg, #0284c7 0%, #0369a1 100%)" title="Çelik Mavi"></span>
+            <span class="preset-chip" data-gradient="linear-gradient(135deg, #18181b 0%, #27272a 100%)" title="Obsidian Koyu"></span>
             <span class="preset-chip" data-color="#ffffff" title="Beyaz"></span>
             <span class="preset-chip" data-color="#f8fafc" title="Hafif Gri"></span>
             <span class="preset-chip" data-color="rgba(255,255,255,0.85)" title="Buzlu Cam"></span>
@@ -110,7 +110,7 @@ class BlockInspector {
             <button class="shadow-opt ${!s.shadow && !d.shadow ? 'active' : ''}" data-shadow="none">Düz</button>
             <button class="shadow-opt" data-shadow="0 4px 6px -1px rgba(0,0,0,0.06)">Hafif</button>
             <button class="shadow-opt" data-shadow="0 10px 25px -5px rgba(0,0,0,0.1)">Orta</button>
-            <button class="shadow-opt" data-shadow="0 20px 35px -10px rgba(99,102,241,0.3)">Parlama</button>
+            <button class="shadow-opt" data-shadow="0 20px 35px -10px rgba(56,189,248,0.25)">Parlama</button>
           </div>
         </div>
       </div>

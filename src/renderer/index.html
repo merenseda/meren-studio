@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meren Studio - Kişisel Veri Kasası & Günlük</title>
+  <title>Meren Studio</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,27 +12,27 @@
     <!-- Üst Başlık & Araç Çubuğu -->
     <header class="app-header">
       <div class="header-left">
-        <!-- Sol Paneli Aç / Kapat Butonu -->
+        <!-- Sol Menü Aç / Kapa Butonu -->
         <button id="btnToggleLeftSidebar" class="icon-toggle-btn" title="Sol Menüyü Gizle / Göster (Ctrl+B)">
           <span class="toggle-icon">◀</span>
         </button>
 
-        <div class="brand-badge">
-          <span class="brand-icon">🛡️</span>
-          <span class="brand-text">Meren <strong>Vault</strong></span>
-          <span class="format-pill">Şifreli</span>
-        </div>
+        <!-- Doküman Başlığı ve Format Seçici -->
         <div class="doc-title-wrapper">
-          <input type="text" id="docTitleInput" class="doc-title-input" value="Kişisel Veri Kasası & Günlük" title="Doküman Başlığı">
+          <input type="text" id="docTitleInput" class="doc-title-input" value="yeni meren dosyası" placeholder="Dosya adı..." title="Doküman Adı">
+          <select id="docFormatSelect" class="doc-format-select" title="Kayıt Formatı (.meren / .hrav)">
+            <option value="meren" selected>.meren</option>
+            <option value="hrav">.hrav</option>
+          </select>
           <span id="saveStatusDot" class="status-dot saved" title="Kaydedildi"></span>
         </div>
       </div>
 
       <div class="header-right">
-        <button id="btnNew" class="action-btn" title="Yeni Kasa / Günlük Aç (Ctrl+N)">
+        <button id="btnNew" class="action-btn" title="Yeni Boş Doküman (Ctrl+N)">
           <span>➕</span> Yeni
         </button>
-        <button id="btnOpen" class="action-btn" title=".hrav Dosyası Aç (Ctrl+O)">
+        <button id="btnOpen" class="action-btn" title="Dosya Aç (Ctrl+O)">
           <span>📂</span> Aç
         </button>
         <button id="btnSave" class="action-btn primary" title="Kaydet (Ctrl+S)">
@@ -41,23 +41,23 @@
         <button id="btnSaveAs" class="action-btn" title="Farklı Kaydet">
           <span>📥</span> Farklı Kaydet
         </button>
-        <button id="btnPrintPdf" class="action-btn outline" title="Yazdır veya Güvenli PDF Olarak Kaydet">
+        <button id="btnPrintPdf" class="action-btn outline" title="Yazdır veya PDF Olarak Kaydet (Ctrl+P)">
           <span>🖨️</span> Yazdır / PDF
         </button>
 
-        <!-- Sağ Paneli Aç / Kapat Butonu -->
-        <button id="btnToggleRightSidebar" class="icon-toggle-btn" title="Sağ Denetçiyi Gizle / Göster">
-          <span class="toggle-icon">▶</span>
+        <!-- Sağ Denetçi Aç / Kapa Butonu (Başlangıçta Kapalı) -->
+        <button id="btnToggleRightSidebar" class="icon-toggle-btn panel-closed" title="Sağ Denetçiyi Göster / Gizle">
+          <span class="toggle-icon">◀</span>
         </button>
       </div>
     </header>
 
-    <!-- Microsoft Word Benzeri Korumalı Görünüm Güvenlik Şeridi -->
+    <!-- Word Benzeri Korumalı Görünüm Şeridi -->
     <div class="protected-view-banner" id="protectedViewBanner" style="display: none;">
       <div class="banner-left-info">
         <span class="banner-shield-icon">🛡️</span>
         <div class="banner-text-block">
-          <strong>KORUMALI GÖRÜNÜM:</strong> Bu dosya kritik verilerinizi ve kişisel notlarınızı kaza eseri silinmeye veya değiştirilmeye karşı korumak için <u>salt okunur</u> açıldı.
+          <strong>KORUMALI GÖRÜNÜM:</strong> Bu dosya kaza eseri silinmeye veya değiştirilmeye karşı korumak için <u>salt okunur</u> açıldı.
         </div>
       </div>
       <button class="enable-edit-btn" id="btnEnableEditing">
@@ -68,14 +68,14 @@
     <!-- Ana 3 Panelli Stüdyo -->
     <main class="studio-workspace" id="studioWorkspace">
       
-      <!-- SOL: Kasa & Günlük Bileşen Paleti -->
+      <!-- SOL: Bileşen Paleti -->
       <aside class="sidebar-palette" id="sidebarPalette">
         <div class="palette-header">
           <div class="panel-header-title-row">
-            <h3>Kasa & Günlük Menüsü</h3>
+            <h3>Bileşenler</h3>
             <button class="mini-collapse-btn" id="btnCollapseLeft" title="Menüyü Daralt">◀</button>
           </div>
-          <input type="text" id="componentSearch" class="palette-search-input" placeholder="Bileşen ara (Şifre, Günlük, Sağlık)...">
+          <input type="text" id="componentSearch" class="palette-search-input" placeholder="Bileşen ara...">
         </div>
 
         <div class="palette-categories" id="paletteCategories">
@@ -83,23 +83,23 @@
         </div>
       </aside>
 
-      <!-- SOL BOYUTLANDIRMA TUTAMACI (Resizer) -->
+      <!-- SOL RESIZER -->
       <div class="resizer-handle resizer-left" id="resizerLeft" title="Genişliği ayarlamak için sürükleyin"></div>
 
-      <!-- ORTA: Canlı Görsel Kasa Tuvali -->
+      <!-- ORTA: Tuval -->
       <section class="canvas-viewport" id="canvasViewport">
         <div class="canvas-page-wrapper">
           <div class="visual-canvas" id="visualCanvas">
-            <!-- Dinamik Kasa Blokları -->
+            <!-- Program açıldığında tamamen boş başlar -->
           </div>
         </div>
       </section>
 
-      <!-- SAĞ BOYUTLANDIRMA TUTAMACI (Resizer) -->
+      <!-- SAĞ RESIZER -->
       <div class="resizer-handle resizer-right" id="resizerRight" title="Genişliği ayarlamak için sürükleyin"></div>
 
-      <!-- SAĞ: Stil & Özellik Denetçisi -->
-      <aside class="sidebar-inspector" id="sidebarInspector">
+      <!-- SAĞ: Denetçi (Başlangıçta İÇERİDE / KAPALI) -->
+      <aside class="sidebar-inspector collapsed" id="sidebarInspector">
         <!-- inspector.js ile doldurulur -->
       </aside>
 
@@ -109,14 +109,14 @@
     <footer class="app-statusbar">
       <div class="statusbar-left">
         <span class="status-badge secure">
-          <span>🔒</span> AES-256-GCM (.hrav Otomatik Şifreli Kasa)
+          <span>🔒</span> AES-256-GCM Şifreli
         </span>
         <span class="status-item" id="filePathStatus">Yeni Belge (Henüz Kaydedilmedi)</span>
       </div>
       <div class="statusbar-right">
-        <span class="status-item" id="blockCountStatus">0 Kayıt</span>
-        <span class="status-item" id="modeStatusBadge">Korumalı Mod</span>
-        <span class="status-item ready-status">● Sistem Güvenli</span>
+        <span class="status-item" id="blockCountStatus">0 Bileşen</span>
+        <span class="status-item" id="modeStatusBadge">✏️ Düzenleme Modu</span>
+        <span class="status-item ready-status">● Sistem Hazır</span>
       </div>
     </footer>
   </div>
