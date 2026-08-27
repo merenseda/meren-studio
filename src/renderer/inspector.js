@@ -126,58 +126,12 @@ class BlockInspector {
     this.bindEvents(block);
   }
 
-  // Dinamik Veri Alanları (Diziler ve Özel Kontroller Dahil)
+  // Dinamik Veri Alanları (Sadeleştirilmiş)
   renderDataInputs(block) {
     const d = block.data || {};
     let inputsHtml = '';
 
-    // 1. Özel Bileşen Aksiyonları
-    if (block.componentId === 'vault-password-card') {
-      inputsHtml += `
-        <div style="margin-bottom: 12px;">
-          <button class="insp-full-btn" id="inspGenPassBtn">🎲 16 Haneli Güçlü Şifre Üret</button>
-        </div>
-      `;
-    }
-
-    // 2. Dizi Alanları (Todo items, Steps vb.)
-    if (Array.isArray(d.items)) {
-      inputsHtml += `
-        <div class="control-group">
-          <label>Görev Maddeleri (${d.items.length})</label>
-          <div class="insp-items-list">
-            ${d.items.map((it, idx) => `
-              <div class="insp-item-row">
-                <input type="checkbox" ${it.checked ? 'checked' : ''} data-insp-todo-chk="${idx}">
-                <input type="text" class="insp-input" value="${escapeHtml(it.text)}" data-insp-todo-text="${idx}">
-                <button class="insp-del-item-btn" data-insp-del-todo="${idx}">×</button>
-              </div>
-            `).join('')}
-          </div>
-          <button class="insp-add-sub-btn" id="inspAddTodoItem">➕ Yeni Madde Ekle</button>
-        </div>
-      `;
-    }
-
-    if (Array.isArray(d.steps)) {
-      inputsHtml += `
-        <div class="control-group">
-          <label>Talimat Adımları (${d.steps.length})</label>
-          <div class="insp-items-list">
-            ${d.steps.map((st, idx) => `
-              <div class="insp-item-row">
-                <span style="font-size: 0.75rem; color:#94a3b8;">${idx + 1}.</span>
-                <input type="text" class="insp-input" value="${escapeHtml(st.replace(/^\d+\.\s*/, ''))}" data-insp-step-text="${idx}">
-                <button class="insp-del-item-btn" data-insp-del-step="${idx}">×</button>
-              </div>
-            `).join('')}
-          </div>
-          <button class="insp-add-sub-btn" id="inspAddStepItem">➕ Yeni Adım Ekle</button>
-        </div>
-      `;
-    }
-
-    // 3. Standart String & Number Alanları
+    // Standart String & Number Alanları
     for (const key in d) {
       if (['bgColor', 'bgGradient', 'textColor', 'padding', 'margin', 'borderRadius', 'shadow', 'backdropBlur', 'borderWidth', 'borderColor', 'items', 'steps', 'rows', 'headers'].includes(key)) {
         continue;
@@ -193,40 +147,20 @@ class BlockInspector {
             </select>
           </div>
         `;
-      } else if (key === 'mood') {
-        const moods = ['⛅ Düşünceli', '😊 Mutlu', '🔥 Enerjik', '🎯 Odaklanmış', '🌧️ Yorgun'];
-        inputsHtml += `
-          <div class="control-group">
-            <label>Ruh Hali / Etiket</label>
-            <select class="insp-input" data-data-key="mood">
-              ${moods.map(m => `<option value="${m}" ${d.mood === m ? 'selected' : ''}>${m}</option>`).join('')}
-            </select>
-          </div>
-        `;
-      } else if (key === 'priority') {
-        const prios = ['⭐ Önemli', '🔥 Acil', '💡 Fikir'];
-        inputsHtml += `
-          <div class="control-group">
-            <label>Öncelik Seviyesi</label>
-            <select class="insp-input" data-data-key="priority">
-              ${prios.map(p => `<option value="${p}" ${d.priority === p ? 'selected' : ''}>${p}</option>`).join('')}
-            </select>
-          </div>
-        `;
       } else if (typeof d[key] === 'string') {
         const label = this.formatFieldLabel(key);
-        if (d[key].length > 40) {
+        if (d[key].length > 40 || key === 'body' || key === 'notes') {
           inputsHtml += `
             <div class="control-group">
               <label>${label}</label>
-              <textarea class="insp-input" data-data-key="${key}" rows="2">${d[key]}</textarea>
+              <textarea class="insp-input" data-data-key="${key}" rows="3">${d[key] || ''}</textarea>
             </div>
           `;
         } else {
           inputsHtml += `
             <div class="control-group">
               <label>${label}</label>
-              <input type="text" class="insp-input" data-data-key="${key}" value="${escapeHtml(d[key])}">
+              <input type="text" class="insp-input" data-data-key="${key}" value="${escapeHtml(d[key] || '')}">
             </div>
           `;
         }
@@ -250,22 +184,19 @@ class BlockInspector {
       accountName: 'Hesap / Hizmet Adı',
       username: 'Kullanıcı Adı / E-posta',
       password: 'Şifre',
-      notes: 'Özel Notlar',
-      bankName: 'Banka / Kurum',
+      notes: 'Notlar',
+      bankName: 'Banka Adı',
       accountNumber: 'IBAN / Hesap No',
       currency: 'Para Birimi',
       branchOrType: 'Hesap Türü',
-      additionalAssets: 'Ek Varlık / Poliçe',
+      additionalAssets: 'Not',
       fullName: 'Ad Soyad',
       allergies: 'Alerjiler',
       chronicConditions: 'Kronik / İlaç',
       emergencyContact: 'Acil İrtibat Tel',
       hospital: 'Tercih Edilen Hastane',
       date: 'Tarih',
-      body: 'Günlük Metni',
-      tag: 'Kategori Etiketi',
-      note: 'Gizli Not Metni',
-      description: 'Açıklama'
+      body: 'Günlük Metni'
     };
     return map[key] || key;
   }
@@ -278,17 +209,6 @@ class BlockInspector {
     const delBtn = this.container.querySelector('#inspDelBtn');
     if (delBtn) delBtn.onclick = () => this.engine.removeBlock(block.id);
 
-    // Rastgele Şifre Üretici
-    const genPassBtn = this.container.querySelector('#inspGenPassBtn');
-    if (genPassBtn) {
-      genPassBtn.onclick = () => {
-        const newPass = this.engine.generateStrongPassword(16);
-        block.data.password = newPass;
-        this.engine.emit('change', this.engine.blocks);
-        this.engine.showToast('🎲 16 Haneli Güçlü Şifre Üretildi!');
-      };
-    }
-
     // Dinamik Data Girişleri
     this.container.querySelectorAll('[data-data-key]').forEach(input => {
       input.addEventListener('input', () => {
@@ -296,17 +216,6 @@ class BlockInspector {
         const val = input.type === 'number' ? parseFloat(input.value) : input.value;
         this.engine.updateBlockData(block.id, key, val);
       });
-    });
-
-    // Todo Madde Yönetimi
-    this.container.querySelectorAll('[data-insp-todo-chk]').forEach(chk => {
-      chk.onchange = () => {
-        const idx = parseInt(chk.dataset.inspTodoChk);
-        if (block.data.items && block.data.items[idx]) {
-          block.data.items[idx].checked = chk.checked;
-          this.engine.emit('change', this.engine.blocks);
-        }
-      };
     });
 
     this.container.querySelectorAll('[data-insp-todo-text]').forEach(input => {

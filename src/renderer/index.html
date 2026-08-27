@@ -29,6 +29,9 @@
       </div>
 
       <div class="header-right">
+        <button id="btnToggleSearch" class="action-btn" title="Sayfa İçi Arama (Ctrl+F)">
+          <span>🔍</span> Ara
+        </button>
         <button id="btnNew" class="action-btn" title="Yeni Boş Doküman (Ctrl+N)">
           <span>➕</span> Yeni
         </button>
@@ -51,6 +54,16 @@
         </button>
       </div>
     </header>
+
+    <!-- Ctrl+F Sayfa İçi Arama Çubuğu -->
+    <div class="search-floating-bar" id="searchFloatingBar" style="display: none;">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="canvasSearchInput" placeholder="Sayfa içinde ara... (Enter / Esc)" autocomplete="off">
+      <span id="searchResultCount" class="search-count">0/0</span>
+      <button id="btnSearchPrev" class="search-nav-btn" title="Önceki (Shift+Enter)">▲</button>
+      <button id="btnSearchNext" class="search-nav-btn" title="Sonraki (Enter)">▼</button>
+      <button id="btnSearchClose" class="search-nav-btn close-btn" title="Kapat (Esc)">✕</button>
+    </div>
 
     <!-- Word Benzeri Korumalı Görünüm Şeridi -->
     <div class="protected-view-banner" id="protectedViewBanner" style="display: none;">

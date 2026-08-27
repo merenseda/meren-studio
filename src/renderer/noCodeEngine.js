@@ -567,7 +567,35 @@ class NoCodeEngine {
     `;
 
     switch (block.componentId) {
-      // 1. ŞİFRE VE HESAP KASASI
+      // 1. BAŞLIK
+      case 'hero-vault-header':
+        return `
+          <div class="nc-vault-hero" style="${inlineStyle}">
+            <h1 class="nc-hero-title" data-bind="title">${d.title}</h1>
+            <p class="nc-hero-sub" data-bind="subtitle">${d.subtitle}</p>
+          </div>
+        `;
+
+      // 2. GÜNLÜK
+      case 'journal-entry-card':
+        const words = (d.body || '').trim() ? (d.body || '').trim().split(/\s+/).length : 0;
+        return `
+          <div class="nc-journal-card" style="${inlineStyle}">
+            <div class="nc-journal-meta">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="nc-journal-date">📅 <span data-bind="date">${d.date}</span></span>
+                <button class="nc-mini-tag-btn" data-action="set-today-date" title="Şu Anki Tarih ve Saati Ayarla">⏰ Şimdi</button>
+              </div>
+            </div>
+            <h2 class="nc-journal-title" data-bind="title">${d.title}</h2>
+            <div class="nc-journal-body" data-bind="body">${d.body}</div>
+            <div class="nc-journal-footer">
+              <span class="nc-journal-counter">💬 ${words} Kelime • ${(d.body || '').length} Karakter</span>
+            </div>
+          </div>
+        `;
+
+      // 3. ŞİFRE
       case 'vault-password-card':
         return `
           <div class="nc-vault-card" style="${inlineStyle}">
@@ -576,9 +604,6 @@ class NoCodeEngine {
                 <span class="nc-vault-icon">🔐</span>
                 <h3 class="nc-vault-title" data-bind="accountName">${d.accountName}</h3>
               </div>
-              <button class="nc-tool-btn generate-pass-btn" data-action="generate-password" title="16 Haneli Güçlü Şifre Üret">
-                🎲 Şifre Üret
-              </button>
             </div>
             
             <div class="nc-vault-grid">
@@ -604,29 +629,7 @@ class NoCodeEngine {
           </div>
         `;
 
-      // 2. ACİL DURUM TALİMATLARI
-      case 'vault-emergency-instructions':
-        const steps = Array.isArray(d.steps) ? d.steps : [d.step1 || '1. Talimat', d.step2 || '2. Talimat'];
-        const stepsHtml = steps.map((step, sIdx) => `
-          <div class="nc-step-row">
-            <span class="nc-step-num">${sIdx + 1}.</span>
-            <div class="nc-step-text" contenteditable="true" data-step-idx="${sIdx}">${step.replace(/^\d+\.\s*/, '')}</div>
-            <button class="nc-item-del-btn" data-del-step="${sIdx}" title="Bu adımı sil">×</button>
-          </div>
-        `).join('');
-
-        return `
-          <div class="nc-emergency-box" style="${inlineStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <h3 class="nc-emergency-title" data-bind="title">${d.title}</h3>
-              <span class="nc-urgency-pill">${d.urgency || 'Yüksek Öncelik'}</span>
-            </div>
-            <div class="nc-steps-container">${stepsHtml}</div>
-            <button class="nc-add-action-btn" data-action="add-step">➕ Yeni Adım Ekle</button>
-          </div>
-        `;
-
-      // 3. FİNANS VE VARLIK KAYDI
+      // 4. BANKA BİLGİLERİ
       case 'vault-financial-card':
         return `
           <div class="nc-financial-card" style="${inlineStyle}">
@@ -640,18 +643,18 @@ class NoCodeEngine {
             <div class="nc-iban-box">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="nc-iban-label">IBAN / Hesap No:</span>
-                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.accountNumber)}" title="IBAN Kopyala">📋 IBAN Kopyala</button>
+                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.accountNumber || '')}" title="IBAN Kopyala">📋 IBAN Kopyala</button>
               </div>
-              <code class="nc-iban-code" data-bind="accountNumber">${d.accountNumber}</code>
+              <code class="nc-iban-code" data-bind="accountNumber">${d.accountNumber || ''}</code>
             </div>
             <div class="nc-fin-details">
-              <div><small>Hesap Türü:</small> <span data-bind="branchOrType">${d.branchOrType}</span></div>
-              ${d.additionalAssets ? `<div style="margin-top: 4px;"><small>Ek Not / Poliçe:</small> <span data-bind="additionalAssets">${d.additionalAssets}</span></div>` : ''}
+              <div><small>Hesap Türü:</small> <span data-bind="branchOrType">${d.branchOrType || ''}</span></div>
+              <div style="margin-top: 4px;"><small>Not:</small> <span data-bind="additionalAssets">${d.additionalAssets || ''}</span></div>
             </div>
           </div>
         `;
 
-      // 4. SAĞLIK VE ACİL İRTİBAT
+      // 5. SAĞLIK VE ACİL İRTİBAT
       case 'vault-health-card':
         const bloodTypes = ['A Rh (+)', '0 Rh (+)', 'B Rh (+)', 'AB Rh (+)', 'A Rh (-)', '0 Rh (-)', 'B Rh (-)'];
         const bloodChips = bloodTypes.map(bt => `
@@ -668,141 +671,22 @@ class NoCodeEngine {
               </div>
             </div>
             <div class="nc-health-grid">
-              <div><small>Alerjiler:</small> <p data-bind="allergies">${d.allergies}</p></div>
-              <div><small>Kronik / İlaç:</small> <p data-bind="chronicConditions">${d.chronicConditions}</p></div>
+              <div><small>Alerjiler:</small> <p data-bind="allergies">${d.allergies || ''}</p></div>
+              <div><small>Kronik / İlaç:</small> <p data-bind="chronicConditions">${d.chronicConditions || ''}</p></div>
             </div>
             <div class="nc-emergency-contact-box">
               <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>🚨 <strong>Acil İrtibat:</strong> <span data-bind="emergencyContact">${d.emergencyContact}</span></div>
-                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.emergencyContact)}" title="Numarayı Kopyala">📞 Kopyala</button>
+                <div>🚨 <strong>Acil İrtibat:</strong> <span data-bind="emergencyContact">${d.emergencyContact || ''}</span></div>
+                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.emergencyContact || '')}" title="Numarayı Kopyala">📞 Kopyala</button>
               </div>
             </div>
           </div>
         `;
 
-      // 5. TARİHLİ GÜNLÜK GİRDİSİ
-      case 'journal-entry-card':
-        const moods = ['⛅ Düşünceli', '😊 Mutlu', '🔥 Enerjik', '🎯 Odaklanmış', '🌧️ Yorgun'];
-        const moodChips = moods.map(m => `
-          <button class="mood-chip ${d.mood === m ? 'active' : ''}" data-set-mood="${m}">${m}</button>
-        `).join('');
-
-        const words = (d.body || '').trim() ? (d.body || '').trim().split(/\s+/).length : 0;
-
-        return `
-          <div class="nc-journal-card" style="${inlineStyle}">
-            <div class="nc-journal-meta">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="nc-journal-date">📅 <span data-bind="date">${d.date}</span></span>
-                <button class="nc-mini-tag-btn" data-action="set-today-date" title="Şu Anki Tarih ve Saati Ayarla">⏰ Şimdi</button>
-              </div>
-              <div class="mood-chips-group">${moodChips}</div>
-            </div>
-            <h2 class="nc-journal-title" data-bind="title">${d.title}</h2>
-            <div class="nc-journal-body" data-bind="body">${d.body}</div>
-            <div class="nc-journal-footer">
-              <span class="nc-journal-counter">💬 ${words} Kelime • ${(d.body || '').length} Karakter</span>
-            </div>
-          </div>
-        `;
-
-      // 6. GİZLİ KİŞİSEL NOT
-      case 'secret-note-card':
-        return `
-          <div class="nc-secret-card" style="${inlineStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div class="nc-secret-badge" data-bind="tag">${d.tag}</div>
-              <button class="nc-blur-toggle-btn" data-action="toggle-blur" title="Gizlilik Perdesini Aç/Kapat">
-                ${d.isBlurred ? '👁️ Perdeyi Aç' : '🙈 Gizle'}
-              </button>
-            </div>
-            <p class="nc-secret-note ${d.isBlurred ? 'blurred' : ''}" data-bind="note">${d.note}</p>
-          </div>
-        `;
-
-      // 7. HIZLI FİKİR KAPSÜLÜ
-      case 'quick-idea-card':
-        const priorities = ['⭐ Önemli', '🔥 Acil', '💡 Fikir'];
-        const prioChips = priorities.map(p => `
-          <button class="prio-chip ${d.priority === p ? 'active' : ''}" data-set-prio="${p}">${p}</button>
-        `).join('');
-
-        return `
-          <div class="nc-idea-card ${d.isCompleted ? 'completed-card' : ''}" style="${inlineStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div class="prio-chips-group">${prioChips}</div>
-              <label class="nc-idea-chk-label">
-                <input type="checkbox" ${d.isCompleted ? 'checked' : ''} data-action="toggle-idea-done">
-                <span>Tamamlandı</span>
-              </label>
-            </div>
-            <h4 data-bind="title" style="margin-bottom: 6px;">${d.title}</h4>
-            <p data-bind="description" style="line-height: 1.5; font-size: 0.95rem;">${d.description}</p>
-          </div>
-        `;
-
-      // 8. KASA / GÜNLÜK ANA BAŞLIĞI
-      case 'hero-vault-header':
-        return `
-          <div class="nc-vault-hero" style="${inlineStyle}">
-            <div class="nc-shield-badge">🔒 AES-256 Şifreli Dijital Kasa</div>
-            <h1 class="nc-hero-title" data-bind="title">${d.title}</h1>
-            <p class="nc-hero-sub" data-bind="subtitle">${d.subtitle}</p>
-          </div>
-        `;
-
-      // 9. BUZLU CAM KART
-      case 'glass-vault-card':
-        return `
-          <div class="nc-glass-card" style="${inlineStyle}; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4);">
-            <h3 data-bind="title" style="margin-bottom: 8px;">${d.title}</h3>
-            <p data-bind="text" style="line-height: 1.6;">${d.text}</p>
-          </div>
-        `;
-
-      // 10. AYIRICI ÇİZGİ
-      case 'vault-divider':
-        return `<hr style="border: none; border-top: 1px solid ${d.lineColor || '#e2e8f0'}; margin: ${d.margin || '20px'} 0;">`;
-
-      // 11. GÖREV / HEDEF LİSTESİ
-      case 'vault-todo-list':
-        const items = d.items || [];
-        const completedCount = items.filter(it => it.checked).length;
-        const totalCount = items.length;
-        const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
-        const itemsHtml = items.map((it, idx) => `
-          <div class="nc-todo-row ${it.checked ? 'completed' : ''}">
-            <input type="checkbox" ${it.checked ? 'checked' : ''} data-todo-idx="${idx}">
-            <span class="nc-todo-text" contenteditable="true" data-todo-text-idx="${idx}">${it.text}</span>
-            <button class="nc-item-del-btn" data-del-todo="${idx}" title="Görevi Sil">×</button>
-          </div>
-        `).join('');
-
-        return `
-          <div class="nc-todo-widget" style="${inlineStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <h4 data-bind="title">${d.title}</h4>
-              <span class="nc-todo-stats">${completedCount}/${totalCount} Tamamlandı (%${percent})</span>
-            </div>
-            
-            <div class="nc-progress-bar-track">
-              <div class="nc-progress-bar-fill" style="width: ${percent}%"></div>
-            </div>
-
-            <div class="nc-todo-list">${itemsHtml}</div>
-
-            <div class="nc-add-item-row">
-              <input type="text" class="nc-new-item-input" placeholder="Yeni görev veya madde yazın..." data-todo-input>
-              <button class="nc-add-action-btn" data-action="add-todo">➕ Ekle</button>
-            </div>
-          </div>
-        `;
-
-      // 12. KRİTİK BİLGİ TABLOSU
+      // 6. TABLO
       case 'vault-info-table':
-        const headers = d.headers || ['Kurum / Hizmet', 'Kullanıcı / No', 'Detay'];
-        const rows = d.rows || [];
+        const headers = d.headers || ['Sütun 1', 'Sütun 2', 'Sütun 3'];
+        const rows = d.rows || [['', '', '']];
         const filterQuery = (this.tableFilters[block.id] || '').toLowerCase().trim();
 
         const filteredRows = rows.map((r, originalIdx) => ({ row: r, idx: originalIdx }))
@@ -836,6 +720,10 @@ class NoCodeEngine {
             <button class="nc-add-action-btn" data-action="add-table-row" style="margin-top: 10px;">➕ Yeni Satır Ekle</button>
           </div>
         `;
+
+      // 7. AYIRICI ÇİZGİ
+      case 'vault-divider':
+        return `<hr style="border: none; border-top: 1px solid ${d.lineColor || '#e2e8f0'}; margin: ${d.margin || '20px'} 0;">`;
 
       default:
         return `<div style="${inlineStyle}">Bileşen: ${block.componentId}</div>`;
@@ -876,114 +764,7 @@ class NoCodeEngine {
       };
     });
 
-    // 3. Rastgele Şifre Üret
-    containerEl.querySelectorAll('[data-action="generate-password"]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const blockWrap = btn.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        if (block) {
-          const newPass = this.generateStrongPassword(16);
-          block.data.password = newPass;
-          this.emit('change', this.blocks);
-          this.showToast('🎲 16 Haneli Güçlü Şifre Üretildi!');
-        }
-      };
-    });
-
-    // 4. Todo Checklist İşaretleme
-    containerEl.querySelectorAll('.nc-todo-row input[type="checkbox"]').forEach(chk => {
-      chk.onchange = (e) => {
-        e.stopPropagation();
-        const blockWrap = chk.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        const idx = parseInt(chk.dataset.todoIdx);
-        if (block && block.data.items && block.data.items[idx] !== undefined) {
-          block.data.items[idx].checked = chk.checked;
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    // 5. Todo Madde Metin Düzenleme & Silme
-    containerEl.querySelectorAll('[data-todo-text-idx]').forEach(el => {
-      el.addEventListener('input', () => {
-        const blockWrap = el.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        const idx = parseInt(el.dataset.todoTextIdx);
-        if (block && block.data.items && block.data.items[idx]) {
-          block.data.items[idx].text = el.innerText;
-        }
-      });
-    });
-
-    containerEl.querySelectorAll('[data-del-todo]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const blockWrap = btn.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        const idx = parseInt(btn.dataset.delTodo);
-        if (block && block.data.items) {
-          block.data.items.splice(idx, 1);
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    // 6. Todo Yeni Madde Ekle
-    containerEl.querySelectorAll('[data-action="add-todo"]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const blockWrap = btn.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        const input = blockWrap.querySelector('[data-todo-input]');
-        if (block && input && input.value.trim()) {
-          if (!block.data.items) block.data.items = [];
-          block.data.items.push({ text: input.value.trim(), checked: false });
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    // 7. Acil Durum Adım Ekle / Sil / Düzenle
-    containerEl.querySelectorAll('[data-step-idx]').forEach(el => {
-      el.addEventListener('input', () => {
-        const blockWrap = el.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        const idx = parseInt(el.dataset.stepIdx);
-        if (block && block.data.steps && block.data.steps[idx] !== undefined) {
-          block.data.steps[idx] = `${idx + 1}. ${el.innerText}`;
-        }
-      });
-    });
-
-    containerEl.querySelectorAll('[data-del-step]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const blockWrap = btn.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        const idx = parseInt(btn.dataset.delStep);
-        if (block && block.data.steps) {
-          block.data.steps.splice(idx, 1);
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    containerEl.querySelectorAll('[data-action="add-step"]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const blockWrap = btn.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        if (block) {
-          if (!block.data.steps) block.data.steps = [];
-          block.data.steps.push(`${block.data.steps.length + 1}. Yeni acil durum talimatı yazın...`);
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    // 8. Sağlık Kan Grubu Çipleri
+    // 3. Sağlık Kan Grubu Çipleri
     containerEl.querySelectorAll('[data-set-blood]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
@@ -996,7 +777,7 @@ class NoCodeEngine {
       };
     });
 
-    // 9. Günlük Tarihini "Şimdi" Yap
+    // 4. Günlük Tarihini "Şimdi" Yap
     containerEl.querySelectorAll('[data-action="set-today-date"]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
@@ -1011,58 +792,7 @@ class NoCodeEngine {
       };
     });
 
-    // 10. Günlük Ruh Hali Çipleri
-    containerEl.querySelectorAll('[data-set-mood]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const blockWrap = btn.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        if (block) {
-          block.data.mood = btn.dataset.setMood;
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    // 11. Gizli Not Blur Perde Aç / Kapat
-    containerEl.querySelectorAll('[data-action="toggle-blur"]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const blockWrap = btn.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        if (block) {
-          block.data.isBlurred = !block.data.isBlurred;
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    // 12. Fikir Öncelik Çipleri & Tamamlandı
-    containerEl.querySelectorAll('[data-set-prio]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const blockWrap = btn.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        if (block) {
-          block.data.priority = btn.dataset.setPrio;
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    containerEl.querySelectorAll('[data-action="toggle-idea-done"]').forEach(chk => {
-      chk.onchange = (e) => {
-        e.stopPropagation();
-        const blockWrap = chk.closest('.canvas-block');
-        const block = this.blocks.find(b => b.id === blockWrap.dataset.blockId);
-        if (block) {
-          block.data.isCompleted = chk.checked;
-          this.emit('change', this.blocks);
-        }
-      };
-    });
-
-    // 13. Tablo Arama, Hücre Düzenleme, Satır Ekle/Sil
+    // 5. Tablo Arama, Hücre Düzenleme, Satır Ekle/Sil
     containerEl.querySelectorAll('[data-table-filter]').forEach(input => {
       input.addEventListener('input', (e) => {
         const blockWrap = input.closest('.canvas-block');
@@ -1104,7 +834,7 @@ class NoCodeEngine {
         if (block) {
           if (!block.data.rows) block.data.rows = [];
           const colCount = (block.data.headers || ['1', '2', '3']).length;
-          const newRow = new Array(colCount).fill('Yeni Veri');
+          const newRow = new Array(colCount).fill('');
           block.data.rows.push(newRow);
           this.emit('change', this.blocks);
         }

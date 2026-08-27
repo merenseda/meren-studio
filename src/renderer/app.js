@@ -215,6 +215,8 @@
   }
 
   function setupEventListeners() {
+    setupSearchInPage();
+
     componentSearch.addEventListener('input', (e) => {
       renderComponentPalette(e.target.value);
     });
@@ -328,9 +330,161 @@
     window.print();
   }
 
+  // === SAYFA İÇİ ARAMA (CTRL+F) ===
+  let currentSearchMatches = [];
+  let currentMatchIdx = -1;
+
+  function setupSearchInPage() {
+    const btnToggleSearch = document.getElementById('btnToggleSearch');
+    const searchFloatingBar = document.getElementById('searchFloatingBar');
+    const canvasSearchInput = document.getElementById('canvasSearchInput');
+    const searchResultCount = document.getElementById('searchResultCount');
+    const btnSearchPrev = document.getElementById('btnSearchPrev');
+    const btnSearchNext = document.getElementById('btnSearchNext');
+    const btnSearchClose = document.getElementById('btnSearchClose');
+
+    if (!searchFloatingBar) return;
+
+    function toggleSearch(show) {
+      const isVisible = show !== undefined ? show : searchFloatingBar.style.display === 'none';
+      searchFloatingBar.style.display = isVisible ? 'flex' : 'none';
+      if (isVisible) {
+        canvasSearchInput.focus();
+        canvasSearchInput.select();
+        if (canvasSearchInput.value.trim()) {
+          doSearch(canvasSearchInput.value.trim());
+        }
+      } else {
+        clearSearchHighlights();
+        searchResultCount.textContent = '0/0';
+      }
+    }
+
+    if (btnToggleSearch) btnToggleSearch.onclick = () => toggleSearch();
+    if (btnSearchClose) btnSearchClose.onclick = () => toggleSearch(false);
+
+    canvasSearchInput.addEventListener('input', (e) => {
+      doSearch(e.target.value.trim());
+    });
+
+    canvasSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.shiftKey) navigateMatch(-1);
+        else navigateMatch(1);
+      } else if (e.key === 'Escape') {
+        toggleSearch(false);
+      }
+    });
+
+    if (btnSearchNext) btnSearchNext.onclick = () => navigateMatch(1);
+    if (btnSearchPrev) btnSearchPrev.onclick = () => navigateMatch(-1);
+
+    function doSearch(query) {
+      clearSearchHighlights();
+      currentSearchMatches = [];
+      currentMatchIdx = -1;
+
+      if (!query) {
+        searchResultCount.textContent = '0/0';
+        return;
+      }
+
+      const walker = document.createTreeWalker(visualCanvas, NodeFilter.SHOW_TEXT, null, false);
+      const nodesToReplace = [];
+
+      let node;
+      while ((node = walker.nextNode())) {
+        if (node.parentElement && ['SCRIPT', 'STYLE', 'BUTTON'].includes(node.parentElement.tagName)) continue;
+        const text = node.nodeValue;
+        const idx = text.toLowerCase().indexOf(query.toLowerCase());
+        if (idx !== -1) {
+          nodesToReplace.push({ node, text, query });
+        }
+      }
+
+      nodesToReplace.forEach(item => {
+        const { node, text, query } = item;
+        const parent = node.parentNode;
+        if (!parent) return;
+
+        const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+        const frag = document.createDocumentFragment();
+        let lastIdx = 0;
+
+        text.replace(regex, (match, p1, offset) => {
+          if (offset > lastIdx) {
+            frag.appendChild(document.createTextNode(text.substring(lastIdx, offset)));
+          }
+          const mark = document.createElement('mark');
+          mark.className = 'search-highlight';
+          mark.textContent = match;
+          frag.appendChild(mark);
+          currentSearchMatches.push(mark);
+          lastIdx = offset + match.length;
+        });
+
+        if (lastIdx < text.length) {
+          frag.appendChild(document.createTextNode(text.substring(lastIdx)));
+        }
+
+        parent.replaceChild(frag, node);
+      });
+
+      if (currentSearchMatches.length > 0) {
+        currentMatchIdx = 0;
+        updateActiveMatch();
+      } else {
+        searchResultCount.textContent = '0/0';
+      }
+    }
+
+    function navigateMatch(dir) {
+      if (currentSearchMatches.length === 0) return;
+      currentMatchIdx = (currentMatchIdx + dir + currentSearchMatches.length) % currentSearchMatches.length;
+      updateActiveMatch();
+    }
+
+    function updateActiveMatch() {
+      currentSearchMatches.forEach((m, i) => {
+        if (i === currentMatchIdx) {
+          m.classList.add('active-highlight');
+          m.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          m.classList.remove('active-highlight');
+        }
+      });
+      searchResultCount.textContent = `${currentMatchIdx + 1}/${currentSearchMatches.length}`;
+    }
+
+    function clearSearchHighlights() {
+      const highlights = visualCanvas.querySelectorAll('.search-highlight');
+      highlights.forEach(h => {
+        const parent = h.parentNode;
+        if (parent) {
+          parent.replaceChild(document.createTextNode(h.textContent), h);
+          parent.normalize();
+        }
+      });
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+  }
+
   function setupShortcutKeys() {
     window.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        const searchFloatingBar = document.getElementById('searchFloatingBar');
+        const canvasSearchInput = document.getElementById('canvasSearchInput');
+        if (searchFloatingBar) {
+          searchFloatingBar.style.display = 'flex';
+          canvasSearchInput.focus();
+          canvasSearchInput.select();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         if (e.shiftKey) handleSaveAsFile();
         else handleSaveFile();
@@ -354,6 +508,11 @@
         if (sel) {
           e.preventDefault();
           engine.duplicateBlock(sel.id);
+        }
+      } else if (e.key === 'Escape') {
+        const searchFloatingBar = document.getElementById('searchFloatingBar');
+        if (searchFloatingBar && searchFloatingBar.style.display !== 'none') {
+          searchFloatingBar.style.display = 'none';
         }
       } else if (e.key === 'Delete' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) && !document.activeElement.isContentEditable) {
         if (isProtectedView) return;

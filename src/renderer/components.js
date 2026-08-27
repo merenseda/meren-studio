@@ -1,82 +1,101 @@
-// Meren Studio - Acil Durum Kasası & Şifreli Günlük Bileşen Kütüphanesi
+// Meren Studio - Sadeleştirilmiş Bileşen Kütüphanesi
 
 const COMPONENT_CATEGORIES = {
-  vault: { name: 'Acil Durum & Kasa', icon: '🛡️' },
-  journal: { name: 'Günlük & Kişisel Not', icon: '📖' },
-  layout: { name: 'Düzen & Kartlar', icon: '🎴' },
-  tools: { name: 'Güvenli Araçlar', icon: '⚡' }
+  main: { name: 'Temel Bileşenler', icon: '💎' },
+  vault: { name: 'Kasa & Bilgiler', icon: '🔐' },
+  layout: { name: 'Düzen & Çizgiler', icon: '🎴' }
 };
 
 const COMPONENT_REGISTRY = [
-  // --- 1. ACİL DURUM VE KASA BİLEŞENLERİ ---
+  // 1. BAŞLIK
   {
-    id: 'vault-password-card',
-    name: 'Şifre & Hesap Kasası',
-    category: 'vault',
-    icon: '🔐',
-    description: 'Kopyalanabilir, maskeli şifre ve rastgele şifre üreticili kasa kartı',
+    id: 'hero-vault-header',
+    name: 'Başlık',
+    category: 'main',
+    icon: '🌟',
+    description: 'Dokümanın şık ana başlığı ve alt başlığı',
     defaultData: {
-      accountName: 'Ana E-posta / Banka Hesabı',
-      username: 'kullanici@ornek.com',
-      password: 'CokGucluSifre2026!*',
-      notes: '2FA kurtarma kodları evdeki kasadadır.',
+      title: 'Doküman Başlığı',
+      subtitle: 'Alt açıklama metni buraya yazılabilir...',
+      bgGradient: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
+      textColor: '#ffffff',
+      padding: '32px',
+      borderRadius: '14px',
+      shadow: '0 10px 25px -5px rgba(0, 0, 0, 0.25)'
+    }
+  },
+
+  // 2. GÜNLÜK
+  {
+    id: 'journal-entry-card',
+    name: 'Günlük',
+    category: 'main',
+    icon: '📖',
+    description: 'Şimdiki zaman tarihli kişisel not ve günlük kartı',
+    defaultData: {
+      date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long', hour: '2-digit', minute: '2-digit' }),
+      title: 'Günlük Başlığı',
+      body: 'Günün notlarını ve düşüncelerinizi buraya yazabilirsiniz...',
       bgColor: '#ffffff',
+      textColor: '#1e293b',
       padding: '24px',
       borderRadius: '12px',
       shadow: '0 4px 6px -1px rgba(0,0,0,0.06)'
     }
   },
+
+  // 3. ŞİFRE
   {
-    id: 'vault-emergency-instructions',
-    name: 'Acil Durum Talimatları',
+    id: 'vault-password-card',
+    name: 'Şifre',
     category: 'vault',
-    icon: '📜',
-    description: 'Dinamik adımlı "Bana bir şey olursa..." rehber ve yönergesi',
+    icon: '🔐',
+    description: 'Hesap adı, kullanıcı adı, maskeli şifre ve kopyalama kartı',
     defaultData: {
-      title: '⚠️ Acil Durum ve Aile Bilgilendirme Notu',
-      urgency: 'Yüksek Öncelik',
-      steps: [
-        '1. Bu dosyada yer alan finansal bilgileri aile avukatı ile paylaşın.',
-        '2. Evdeki fiziksel evrak kutusunun anahtarı çalışma masasının üst çekmecesindedir.',
-        '3. Banka ve sigorta işlemlerini aşağıdaki irtibat numaralarından başlatın.'
-      ],
-      bgColor: '#fffbeb',
-      borderColor: '#f59e0b',
-      textColor: '#92400e',
-      padding: '24px',
-      borderRadius: '12px'
+      accountName: 'Hesap / Hizmet Adı',
+      username: 'kullanici@ornek.com',
+      password: 'GizliSifre123!',
+      notes: '',
+      bgColor: '#ffffff',
+      padding: '20px',
+      borderRadius: '12px',
+      shadow: '0 4px 6px -1px rgba(0,0,0,0.06)'
     }
   },
+
+  // 4. BANKA BİLGİLERİ
   {
     id: 'vault-financial-card',
-    name: 'Finans & Varlık Kaydı',
+    name: 'Banka Bilgileri',
     category: 'vault',
     icon: '💳',
-    description: 'Banka, IBAN kopyalama, para birimi ve varlık özetleri',
+    description: 'Banka adı, boş IBAN, hesap türü ve not alanı',
     defaultData: {
-      bankName: 'Ana Banka Hesabı & Varlıklar',
-      accountNumber: 'TR12 0006 1000 0000 1234 5678 90',
+      bankName: 'Banka Adı',
+      accountNumber: '',
       currency: 'TL (₺)',
-      branchOrType: 'Maaş / Yatırım Hesabı',
-      additionalAssets: 'Hayat sigortası poliçe no: 987654321',
+      branchOrType: '',
+      additionalAssets: '',
       bgColor: '#ffffff',
       padding: '20px',
       borderRadius: '12px'
     }
   },
+
+  // 5. SAĞLIK BİLGİLERİ
   {
     id: 'vault-health-card',
-    name: 'Sağlık & Acil İrtibat Kartı',
+    name: 'Sağlık Bilgileri',
     category: 'vault',
     icon: '🏥',
-    description: 'Kan grubu seçicisi, kronik bilgiler ve acil arama/kopyalama',
+    description: 'Kan grubu, alerji, kronik durum ve acil irtibat kartı',
     defaultData: {
-      fullName: 'Meren',
+      fullName: 'Ad Soyad',
       bloodType: 'A Rh (+)',
-      allergies: 'Bilinen alerji yok',
-      chronicConditions: 'Düzenli tansiyon ilacı (sabahları 1 doz)',
-      emergencyContact: '0555 123 45 67 (Birinci Derece Yakın)',
-      hospital: 'En Yakın Şehir Hastanesi',
+      allergies: '',
+      chronicConditions: '',
+      emergencyContact: '',
+      hospital: '',
       bgColor: '#fef2f2',
       borderColor: '#ef4444',
       textColor: '#991b1b',
@@ -85,140 +104,35 @@ const COMPONENT_REGISTRY = [
     }
   },
 
-  // --- 2. GÜNLÜK VE KİŞİSEL NOTLAR ---
+  // 6. TABLO
   {
-    id: 'journal-entry-card',
-    name: 'Tarihli Günlük Girdisi',
-    category: 'journal',
-    icon: '📖',
-    description: 'Canlı tarih güncelleyici, ruh hali çipleri ve kelime sayacı',
+    id: 'vault-info-table',
+    name: 'Tablo',
+    category: 'vault',
+    icon: '📊',
+    description: 'Varsayılan tek satırlı ve boş dinamik veri tablosu',
     defaultData: {
-      date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }),
-      mood: '⛅ Düşünceli',
-      title: 'Günün Notları & Düşünceler',
-      body: 'Bugün tüm kritik bilgilerimi ve hedeflerimi bu güvenli kasada güncelledim. AES-256 şifrelemesi sayesinde her şey güvende.',
+      title: 'Bilgi Tablosu',
+      headers: ['Sütun 1', 'Sütun 2', 'Sütun 3'],
+      rows: [
+        ['', '', '']
+      ],
       bgColor: '#ffffff',
-      textColor: '#1e293b',
-      padding: '28px',
-      borderRadius: '14px',
-      shadow: '0 8px 20px -4px rgba(0,0,0,0.06)'
-    }
-  },
-  {
-    id: 'secret-note-card',
-    name: 'Gizli Kişisel Not & Düşünce',
-    category: 'journal',
-    icon: '💭',
-    description: 'Buzlu perde (Blur) korumalı, tıklandığında açılan gizli not',
-    defaultData: {
-      tag: '🔒 Çok Gizli',
-      note: 'Gelecekte hatırlamak istediğim kişisel manifesto ve kararlarım buraya not edilmiştir.',
-      isBlurred: true,
-      bgColor: '#f8fafc',
-      textColor: '#334155',
-      padding: '22px',
-      borderRadius: '12px'
-    }
-  },
-  {
-    id: 'quick-idea-card',
-    name: 'Hızlı Fikir Kapsülü',
-    category: 'journal',
-    icon: '💡',
-    description: 'Öncelik etiketli ve tamamlandı işaretli hızlı fikir kartı',
-    defaultData: {
-      title: '💡 Harika Bir Proje Fikri',
-      description: 'Zaman kaybetmeden uygulamak istediğim yeni konsept ve detaylar.',
-      priority: '⭐ Önemli',
-      isCompleted: false,
-      bgColor: '#ede9fe',
-      textColor: '#5b21b6',
-      padding: '20px',
-      borderRadius: '12px'
+      padding: '16px',
+      borderRadius: '10px'
     }
   },
 
-  // --- 3. DÜZEN VE KARTLAR ---
-  {
-    id: 'hero-vault-header',
-    name: 'Kasa / Günlük Ana Başlığı',
-    category: 'layout',
-    icon: '🌟',
-    description: 'Dokümanın şık karşılama başlığı',
-    defaultData: {
-      title: '💎 Kişisel Kasa & Günlük',
-      subtitle: 'Bu dokümandaki tüm bilgiler AES-256-GCM ile güvenle şifrelenmiştir.',
-      bgGradient: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-      textColor: '#ffffff',
-      padding: '36px',
-      borderRadius: '16px',
-      shadow: '0 10px 25px -5px rgba(49, 46, 129, 0.3)'
-    }
-  },
-  {
-    id: 'glass-vault-card',
-    name: 'Buzlu Cam Kart',
-    category: 'layout',
-    icon: '🧊',
-    description: 'Saydam ve estetik not kutusu',
-    defaultData: {
-      title: 'Önemli Hatırlatma',
-      text: 'Kritik evrakların fiziksel kopyaları çalışma odasındaki kilitli dolaptadır.',
-      bgColor: 'rgba(255, 255, 255, 0.85)',
-      textColor: '#0f172a',
-      padding: '24px',
-      borderRadius: '14px',
-      shadow: '0 8px 32px 0 rgba(31, 38, 135, 0.08)'
-    }
-  },
+  // 7. AYIRICI ÇİZGİ
   {
     id: 'vault-divider',
     name: 'Ayırıcı Çizgi',
     category: 'layout',
     icon: '➖',
-    description: 'Bölümleri estetik şekilde ayırır',
+    description: 'Bölümler arasına estetik ayırıcı çizgi ekler',
     defaultData: {
       lineColor: '#e2e8f0',
       margin: '20px'
-    }
-  },
-
-  // --- 4. GÜVENLİ ARAÇLAR ---
-  {
-    id: 'vault-todo-list',
-    name: 'Acil Durum & Hedef Kontrol Listesi',
-    category: 'tools',
-    icon: '✅',
-    description: 'Dinamik madde ekleme/silme, kalıcı kayıt ve canlı ilerleme çubuğu',
-    defaultData: {
-      title: 'Yapılacaklar & Kontrol Listesi',
-      items: [
-        { text: 'Yıllık banka şifrelerini ve kurtarma kodlarını güncelle', checked: true },
-        { text: 'Fiziksel evrakların yedeklerini kontrol et', checked: false },
-        { text: 'Güvenli dijital kasayı .hrav olarak kaydet', checked: false }
-      ],
-      bgColor: '#ffffff',
-      padding: '20px',
-      borderRadius: '12px'
-    }
-  },
-  {
-    id: 'vault-info-table',
-    name: 'Kritik Bilgi Tablosu',
-    category: 'tools',
-    icon: '📊',
-    description: 'Canlı filtreleme, satır ekleme/silme özellikli dinamik veri tablosu',
-    defaultData: {
-      title: 'Kurum ve Hesap Bilgileri',
-      headers: ['Kurum / Hizmet', 'Kullanıcı / No', 'Detay'],
-      rows: [
-        ['E-Devlet', 'TC Kimlik No', '2FA SMS ile bağlı'],
-        ['Kripto Donanım Cüzdanı', 'Ledger Nano', 'Kurtarma kelimeleri kasada'],
-        ['Bireysel Emeklilik (BES)', 'Poliçe No: 441029', 'Vefat tazminatı mevcut']
-      ],
-      bgColor: '#ffffff',
-      padding: '16px',
-      borderRadius: '10px'
     }
   }
 ];

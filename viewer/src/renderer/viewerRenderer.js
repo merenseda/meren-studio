@@ -93,7 +93,32 @@ class ViewerRenderer {
     `;
 
     switch (block.componentId) {
-      // 1. ŞİFRE VE HESAP KASASI
+      // 1. BAŞLIK
+      case 'hero-vault-header':
+        return `
+          <div class="nc-vault-hero" style="${inlineStyle}">
+            <h1 class="nc-hero-title">${escapeHtml(d.title)}</h1>
+            <p class="nc-hero-sub">${escapeHtml(d.subtitle)}</p>
+          </div>
+        `;
+
+      // 2. GÜNLÜK
+      case 'journal-entry-card':
+        const words = (d.body || '').trim() ? (d.body || '').trim().split(/\s+/).length : 0;
+        return `
+          <div class="nc-journal-card" style="${inlineStyle}">
+            <div class="nc-journal-meta">
+              <span class="nc-journal-date">📅 ${escapeHtml(d.date)}</span>
+            </div>
+            <h2 class="nc-journal-title">${escapeHtml(d.title)}</h2>
+            <div class="nc-journal-body">${escapeHtml(d.body)}</div>
+            <div class="nc-journal-footer">
+              <span class="nc-journal-counter">💬 ${words} Kelime • ${(d.body || '').length} Karakter</span>
+            </div>
+          </div>
+        `;
+
+      // 3. ŞİFRE
       case 'vault-password-card':
         return `
           <div class="nc-vault-card" style="${inlineStyle}">
@@ -128,27 +153,7 @@ class ViewerRenderer {
           </div>
         `;
 
-      // 2. ACİL DURUM TALİMATLARI
-      case 'vault-emergency-instructions':
-        const steps = Array.isArray(d.steps) ? d.steps : [d.step1 || '1. Talimat', d.step2 || '2. Talimat'];
-        const stepsHtml = steps.map((step, sIdx) => `
-          <div class="nc-step-row">
-            <span class="nc-step-num">${sIdx + 1}.</span>
-            <div class="nc-step-text">${escapeHtml(step.replace(/^\d+\.\s*/, ''))}</div>
-          </div>
-        `).join('');
-
-        return `
-          <div class="nc-emergency-box" style="${inlineStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <h3 class="nc-emergency-title">${escapeHtml(d.title)}</h3>
-              <span class="nc-urgency-pill">${escapeHtml(d.urgency || 'Yüksek Öncelik')}</span>
-            </div>
-            <div class="nc-steps-container">${stepsHtml}</div>
-          </div>
-        `;
-
-      // 3. FİNANS VE VARLIK KAYDI
+      // 4. BANKA BİLGİLERİ
       case 'vault-financial-card':
         return `
           <div class="nc-financial-card" style="${inlineStyle}">
@@ -162,18 +167,18 @@ class ViewerRenderer {
             <div class="nc-iban-box">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="nc-iban-label">IBAN / Hesap No:</span>
-                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.accountNumber)}" title="IBAN Kopyala">📋 IBAN Kopyala</button>
+                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.accountNumber || '')}" title="IBAN Kopyala">📋 IBAN Kopyala</button>
               </div>
-              <code class="nc-iban-code">${escapeHtml(d.accountNumber)}</code>
+              <code class="nc-iban-code">${escapeHtml(d.accountNumber || '')}</code>
             </div>
             <div class="nc-fin-details">
-              <div><small>Hesap Türü:</small> <span>${escapeHtml(d.branchOrType)}</span></div>
-              ${d.additionalAssets ? `<div style="margin-top: 4px;"><small>Ek Not / Poliçe:</small> <span>${escapeHtml(d.additionalAssets)}</span></div>` : ''}
+              <div><small>Hesap Türü:</small> <span>${escapeHtml(d.branchOrType || '')}</span></div>
+              <div style="margin-top: 4px;"><small>Not:</small> <span>${escapeHtml(d.additionalAssets || '')}</span></div>
             </div>
           </div>
         `;
 
-      // 4. SAĞLIK VE ACİL İRTİBAT
+      // 5. SAĞLIK VE ACİL İRTİBAT
       case 'vault-health-card':
         return `
           <div class="nc-health-card" style="${inlineStyle}">
@@ -185,115 +190,21 @@ class ViewerRenderer {
               </div>
             </div>
             <div class="nc-health-grid">
-              <div><small>Alerjiler:</small> <p>${escapeHtml(d.allergies)}</p></div>
-              <div><small>Kronik / İlaç:</small> <p>${escapeHtml(d.chronicConditions)}</p></div>
+              <div><small>Alerjiler:</small> <p>${escapeHtml(d.allergies || '')}</p></div>
+              <div><small>Kronik / İlaç:</small> <p>${escapeHtml(d.chronicConditions || '')}</p></div>
             </div>
             <div class="nc-emergency-contact-box">
               <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>🚨 <strong>Acil İrtibat:</strong> <span>${escapeHtml(d.emergencyContact)}</span></div>
-                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.emergencyContact)}" title="Numarayı Kopyala">📞 Kopyala</button>
+                <div>🚨 <strong>Acil İrtibat:</strong> <span>${escapeHtml(d.emergencyContact || '')}</span></div>
+                <button class="nc-mini-copy-btn" data-copy-text="${escapeHtml(d.emergencyContact || '')}" title="Numarayı Kopyala">📞 Kopyala</button>
               </div>
             </div>
           </div>
         `;
 
-      // 5. TARİHLİ GÜNLÜK GİRDİSİ
-      case 'journal-entry-card':
-        const words = (d.body || '').trim() ? (d.body || '').trim().split(/\s+/).length : 0;
-        return `
-          <div class="nc-journal-card" style="${inlineStyle}">
-            <div class="nc-journal-meta">
-              <span class="nc-journal-date">📅 ${escapeHtml(d.date)}</span>
-              <span class="mood-chip active">${escapeHtml(d.mood || 'Günlük')}</span>
-            </div>
-            <h2 class="nc-journal-title">${escapeHtml(d.title)}</h2>
-            <div class="nc-journal-body">${escapeHtml(d.body)}</div>
-            <div class="nc-journal-footer">
-              <span class="nc-journal-counter">💬 ${words} Kelime • ${(d.body || '').length} Karakter</span>
-            </div>
-          </div>
-        `;
-
-      // 6. GİZLİ KİŞİSEL NOT (BLUR PERDESİ)
-      case 'secret-note-card':
-        return `
-          <div class="nc-secret-card" style="${inlineStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div class="nc-secret-badge">${escapeHtml(d.tag)}</div>
-              <button class="nc-blur-toggle-btn" data-action="toggle-blur" title="Gizlilik Perdesini Aç/Kapat">
-                ${d.isBlurred ? '👁️ Perdeyi Aç' : '🙈 Gizle'}
-              </button>
-            </div>
-            <p class="nc-secret-note ${d.isBlurred ? 'blurred' : ''}">${escapeHtml(d.note)}</p>
-          </div>
-        `;
-
-      // 7. HIZLI FİKİR KAPSÜLÜ
-      case 'quick-idea-card':
-        return `
-          <div class="nc-idea-card ${d.isCompleted ? 'completed-card' : ''}" style="${inlineStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span class="prio-chip active">${escapeHtml(d.priority || 'Fikir')}</span>
-              ${d.isCompleted ? '<span style="font-size:0.75rem; font-weight:bold;">✅ Tamamlandı</span>' : ''}
-            </div>
-            <h4 style="margin-bottom: 6px;">${escapeHtml(d.title)}</h4>
-            <p style="line-height: 1.5; font-size: 0.95rem;">${escapeHtml(d.description)}</p>
-          </div>
-        `;
-
-      // 8. KASA / GÜNLÜK ANA BAŞLIĞI
-      case 'hero-vault-header':
-        return `
-          <div class="nc-vault-hero" style="${inlineStyle}">
-            <div class="nc-shield-badge">🔒 AES-256 Şifreli Dijital Doküman</div>
-            <h1 class="nc-hero-title">${escapeHtml(d.title)}</h1>
-            <p class="nc-hero-sub">${escapeHtml(d.subtitle)}</p>
-          </div>
-        `;
-
-      // 9. BUZLU CAM KART
-      case 'glass-vault-card':
-        return `
-          <div class="nc-glass-card" style="${inlineStyle}; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4);">
-            <h3 style="margin-bottom: 8px;">${escapeHtml(d.title)}</h3>
-            <p style="line-height: 1.6;">${escapeHtml(d.text)}</p>
-          </div>
-        `;
-
-      // 10. AYIRICI ÇİZGİ
-      case 'vault-divider':
-        return `<hr style="border: none; border-top: 1px solid ${d.lineColor || '#e2e8f0'}; margin: ${d.margin || '20px'} 0;">`;
-
-      // 11. GÖREV / HEDEF LİSTESİ
-      case 'vault-todo-list':
-        const items = d.items || [];
-        const completedCount = items.filter(it => it.checked).length;
-        const totalCount = items.length;
-        const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
-        const itemsHtml = items.map((it) => `
-          <div class="nc-todo-row ${it.checked ? 'completed' : ''}">
-            <input type="checkbox" ${it.checked ? 'checked' : ''} disabled style="cursor:default;">
-            <span class="nc-todo-text">${escapeHtml(it.text)}</span>
-          </div>
-        `).join('');
-
-        return `
-          <div class="nc-todo-widget" style="${inlineStyle}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <h4>${escapeHtml(d.title)}</h4>
-              <span class="nc-todo-stats">${completedCount}/${totalCount} Tamamlandı (%${percent})</span>
-            </div>
-            <div class="nc-progress-bar-track">
-              <div class="nc-progress-bar-fill" style="width: ${percent}%"></div>
-            </div>
-            <div class="nc-todo-list">${itemsHtml}</div>
-          </div>
-        `;
-
-      // 12. KRİTİK BİLGİ TABLOSU
+      // 6. TABLO
       case 'vault-info-table':
-        const headers = d.headers || ['Kurum / Hizmet', 'Kullanıcı / No', 'Detay'];
+        const headers = d.headers || ['Sütun 1', 'Sütun 2', 'Sütun 3'];
         const rows = d.rows || [];
         const filterQuery = (this.tableFilters[block.id] || '').toLowerCase().trim();
 
@@ -318,6 +229,18 @@ class ViewerRenderer {
             <table class="nc-styled-table">
               <thead><tr>${ths}</tr></thead>
               <tbody>${trs.length > 0 ? trs : '<tr><td colspan="' + headers.length + '" style="text-align:center; color:#94a3b8;">Kayıt bulunamadı.</td></tr>'}</tbody>
+            </table>
+          </div>
+        `;
+
+      // 7. AYIRICI ÇİZGİ
+      case 'vault-divider':
+        return `<hr style="border: none; border-top: 1px solid ${d.lineColor || '#e2e8f0'}; margin: ${d.margin || '20px'} 0;">`;
+
+      default:
+        return `<div style="${inlineStyle}">${escapeHtml(d.text || d.title || block.componentId)}</div>`;
+    }
+  }r>'}</tbody>
             </table>
           </div>
         `;
