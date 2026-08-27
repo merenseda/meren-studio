@@ -83,18 +83,23 @@ class BlockInspector {
           </div>
         </div>
 
-        <!-- 3. BOYUTLAR VE BOŞLUKLAR (SPACING) -->
+        <!-- 3. BOYUTLAR VE YERLEŞİM -->
         <div class="inspector-section">
-          <div class="section-title">📐 Boşluklar & Boyutlar</div>
+          <div class="section-title">📐 Boyut & Yan Yana Yerleşim</div>
 
           <div class="control-row">
-            <label>İç Boşluk (Padding): <span id="paddingVal">${parseInt(s.padding || d.padding || 20)}px</span></label>
-            <input type="range" class="slider" id="inspPadding" min="0" max="60" value="${parseInt(s.padding || d.padding || 20)}">
+            <label>Sayfa Genişliği / Yerleşim</label>
+            <div class="shadow-buttons">
+              <button class="shadow-opt ${!s.width || s.width === '100%' ? 'active' : ''}" data-set-width="100%">100% Tam</button>
+              <button class="shadow-opt ${s.width && s.width.includes('50%') ? 'active' : ''}" data-set-width="calc(50% - 8px)">50% (2'li)</button>
+              <button class="shadow-opt ${s.width && s.width.includes('33') ? 'active' : ''}" data-set-width="calc(33.333% - 11px)">33% (3'lü)</button>
+              <button class="shadow-opt ${s.width && s.width.includes('25') ? 'active' : ''}" data-set-width="calc(25% - 12px)">25% (4'lü)</button>
+            </div>
           </div>
 
-          <div class="control-row">
-            <label>Dış Boşluk (Margin): <span id="marginVal">${parseInt(s.margin || d.margin || 10)}px</span></label>
-            <input type="range" class="slider" id="inspMargin" min="0" max="50" value="${parseInt(s.margin || d.margin || 10)}">
+          <div class="control-row" style="margin-top: 10px;">
+            <label>İç Boşluk (Padding): <span id="paddingVal">${parseInt(s.padding || d.padding || 20)}px</span></label>
+            <input type="range" class="slider" id="inspPadding" min="0" max="60" value="${parseInt(s.padding || d.padding || 20)}">
           </div>
 
           <div class="control-row">
@@ -413,10 +418,19 @@ class BlockInspector {
       });
     }
 
-    // Shadow Buttons
-    this.container.querySelectorAll('.shadow-opt').forEach(btn => {
+    // Genişlik & Yerleşim Butonları
+    this.container.querySelectorAll('[data-set-width]').forEach(btn => {
       btn.onclick = () => {
-        this.container.querySelectorAll('.shadow-opt').forEach(b => b.classList.remove('active'));
+        this.container.querySelectorAll('[data-set-width]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.engine.updateBlockStyle(block.id, 'width', btn.dataset.setWidth);
+      };
+    });
+
+    // Shadow Buttons
+    this.container.querySelectorAll('.shadow-opt[data-shadow]').forEach(btn => {
+      btn.onclick = () => {
+        this.container.querySelectorAll('.shadow-opt[data-shadow]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.engine.updateBlockStyle(block.id, 'shadow', btn.dataset.shadow);
       };

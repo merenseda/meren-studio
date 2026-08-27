@@ -320,7 +320,7 @@ class NoCodeEngine {
       });
     });
 
-    // 2. Kenardan Boyutlandırma (Resize handles dragging)
+    // 2. Kenardan Boyutlandırma (Resize handles dragging - Taşmayı Kesinlikle Engeller)
     containerEl.querySelectorAll('.block-resize-handle-right').forEach(handle => {
       handle.addEventListener('mousedown', (e) => {
         e.preventDefault();
@@ -333,16 +333,55 @@ class NoCodeEngine {
         const onMouseMove = (moveEvent) => {
           const deltaX = moveEvent.clientX - startX;
           let newWidth = initialWidth + deltaX;
-          const containerWidth = containerEl.offsetWidth;
-          if (newWidth < 220) newWidth = 220;
-          if (newWidth > containerWidth) newWidth = containerWidth;
+
+          // Sayfadan taşmayı kesin olarak engelle: container iç genişliğini baz al
+          const computedStyle = window.getComputedStyle(containerEl);
+          const paddingLeft = parseFloat(computedStyle.paddingLeft) || 32;
+          const paddingRight = parseFloat(computedStyle.paddingRight) || 32;
+          const maxAvailableWidth = containerEl.clientWidth - paddingLeft - paddingRight;
+
+          // Minimum 180px, maksimum sayfa genişliği (sayfadan çıkamaz)
+          newWidth = Math.max(180, Math.min(newWidth, maxAvailableWidth));
+
+          // Kolay yan yana yerleşim için akıllı yakalama (Snap)
+          const halfWidth = Math.floor((maxAvailableWidth - 16) / 2);
+          const thirdWidth = Math.floor((maxAvailableWidth - 32) / 3);
+          const quarterWidth = Math.floor((maxAvailableWidth - 48) / 4);
+
+          if (Math.abs(newWidth - halfWidth) < 18) {
+            newWidth = halfWidth;
+          } else if (Math.abs(newWidth - thirdWidth) < 18) {
+            newWidth = thirdWidth;
+          } else if (Math.abs(newWidth - quarterWidth) < 18) {
+            newWidth = quarterWidth;
+          } else if (Math.abs(newWidth - maxAvailableWidth) < 22) {
+            newWidth = maxAvailableWidth;
+          }
+
           blockEl.style.width = newWidth + 'px';
         };
 
         const onMouseUp = () => {
           window.removeEventListener('mousemove', onMouseMove);
           window.removeEventListener('mouseup', onMouseUp);
-          const finalWidth = blockEl.style.width;
+
+          const computedStyle = window.getComputedStyle(containerEl);
+          const paddingLeft = parseFloat(computedStyle.paddingLeft) || 32;
+          const paddingRight = parseFloat(computedStyle.paddingRight) || 32;
+          const maxAvailableWidth = containerEl.clientWidth - paddingLeft - paddingRight;
+          const curPx = blockEl.offsetWidth;
+
+          let finalWidth = curPx + 'px';
+          if (curPx >= maxAvailableWidth - 15) {
+            finalWidth = '100%';
+          } else if (Math.abs(curPx - (maxAvailableWidth - 16) / 2) < 20) {
+            finalWidth = 'calc(50% - 8px)';
+          } else if (Math.abs(curPx - (maxAvailableWidth - 32) / 3) < 20) {
+            finalWidth = 'calc(33.333% - 11px)';
+          } else if (Math.abs(curPx - (maxAvailableWidth - 48) / 4) < 20) {
+            finalWidth = 'calc(25% - 12px)';
+          }
+
           this.updateBlockStyle(blockId, 'width', finalWidth);
         };
 

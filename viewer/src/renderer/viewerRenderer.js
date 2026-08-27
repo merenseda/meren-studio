@@ -25,6 +25,9 @@ class ViewerRenderer {
         const blockWrap = document.createElement('div');
         blockWrap.className = 'viewer-block';
         blockWrap.dataset.blockId = block.id;
+        if (block.customStyles && block.customStyles.width) {
+          blockWrap.style.width = block.customStyles.width;
+        }
         blockWrap.innerHTML = this.generateBlockHtml(block);
         containerEl.appendChild(blockWrap);
       });

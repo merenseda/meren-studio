@@ -267,11 +267,22 @@ body, html {
   padding: 36px;
   color: #1e293b;
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .viewer-block {
-  margin-bottom: 18px;
+  margin-bottom: 0;
   page-break-inside: avoid;
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 /* Boş Durum */
