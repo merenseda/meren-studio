@@ -19,17 +19,43 @@ class ViewerRenderer {
       return;
     }
 
-    // 1. Eğer No-Code blokları varsa blokları render et
+    // 1. Eğer No-Code blokları varsa blokları satırlar halinde render et
     if (docData.blocks && Array.isArray(docData.blocks) && docData.blocks.length > 0) {
-      docData.blocks.forEach((block) => {
-        const blockWrap = document.createElement('div');
-        blockWrap.className = 'viewer-block';
-        blockWrap.dataset.blockId = block.id;
-        if (block.customStyles && block.customStyles.width) {
-          blockWrap.style.width = block.customStyles.width;
+      const rows = [];
+      let currentRow = null;
+      docData.blocks.forEach(block => {
+        const rId = block.rowId || ('row_' + block.id);
+        if (!currentRow || currentRow.id !== rId) {
+          currentRow = { id: rId, blocks: [block] };
+          rows.push(currentRow);
+        } else {
+          currentRow.blocks.push(block);
         }
-        blockWrap.innerHTML = this.generateBlockHtml(block);
-        containerEl.appendChild(blockWrap);
+      });
+
+      rows.forEach(row => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'viewer-row';
+        rowEl.dataset.rowId = row.id;
+
+        row.blocks.forEach(block => {
+          const blockWrap = document.createElement('div');
+          blockWrap.className = 'viewer-block';
+          blockWrap.dataset.blockId = block.id;
+
+          if (block.customStyles && block.customStyles.width) {
+            blockWrap.style.width = block.customStyles.width;
+          } else if (row.blocks.length > 1) {
+            blockWrap.style.width = `calc(${Math.floor(100 / row.blocks.length)}% - 8px)`;
+          } else {
+            blockWrap.style.width = '100%';
+          }
+
+          blockWrap.innerHTML = this.generateBlockHtml(block);
+          rowEl.appendChild(blockWrap);
+        });
+
+        containerEl.appendChild(rowEl);
       });
     } 
     // 2. Eski formatta düz HTML varsa HTML'i güvenle render et

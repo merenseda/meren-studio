@@ -393,12 +393,20 @@ body, html {
   color: #1e293b;
   position: relative;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  align-content: flex-start;
+  flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  overflow: hidden;
+}
+
+/* Satır Konteyneri (Her satır bağımsızdır, alttaki bileşen kendiliğinden üste çıkamaz) */
+.canvas-row {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+  box-sizing: border-box;
+  position: relative;
 }
 
 /* === SÜRÜKLENEBİLİR VE BOYUTLANDIRILABİLİR BLOKLAR === */
@@ -429,11 +437,19 @@ body, html {
 }
 
 .canvas-block.drag-over-top {
-  border-top: 3px solid var(--accent-primary);
+  border-top: 3px solid var(--accent-primary) !important;
 }
 
 .canvas-block.drag-over-bottom {
-  border-bottom: 3px solid var(--accent-primary);
+  border-bottom: 3px solid var(--accent-primary) !important;
+}
+
+.canvas-block.drag-over-left {
+  border-left: 4px solid var(--accent-primary) !important;
+}
+
+.canvas-block.drag-over-right {
+  border-right: 4px solid var(--accent-primary) !important;
 }
 
 /* Boyutlandırma Kenar Tutamaçları (Resize Handles) */

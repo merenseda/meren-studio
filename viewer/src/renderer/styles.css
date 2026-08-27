@@ -268,12 +268,19 @@ body, html {
   color: #1e293b;
   position: relative;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  align-content: flex-start;
+  flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  overflow: hidden;
+}
+
+.viewer-row {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+  box-sizing: border-box;
+  position: relative;
 }
 
 .viewer-block {

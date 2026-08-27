@@ -95,6 +95,7 @@ class BlockInspector {
               <button class="shadow-opt ${s.width && s.width.includes('33') ? 'active' : ''}" data-set-width="calc(33.333% - 11px)">33% (3'lü)</button>
               <button class="shadow-opt ${s.width && s.width.includes('25') ? 'active' : ''}" data-set-width="calc(25% - 12px)">25% (4'lü)</button>
             </div>
+            <button class="insp-add-sub-btn" id="inspSeparateRowBtn" style="margin-top: 8px;">↩️ Bağımsız Ayrı Satıra Al</button>
           </div>
 
           <div class="control-row" style="margin-top: 10px;">
@@ -426,6 +427,13 @@ class BlockInspector {
         this.engine.updateBlockStyle(block.id, 'width', btn.dataset.setWidth);
       };
     });
+
+    const sepRowBtn = this.container.querySelector('#inspSeparateRowBtn');
+    if (sepRowBtn) {
+      sepRowBtn.onclick = () => {
+        this.engine.separateBlockToNewRow(block.id);
+      };
+    }
 
     // Shadow Buttons
     this.container.querySelectorAll('.shadow-opt[data-shadow]').forEach(btn => {

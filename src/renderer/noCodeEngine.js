@@ -44,8 +44,9 @@ class NoCodeEngine {
     const newBlock = {
       id: blockId,
       componentId: componentId,
+      rowId: 'row_' + blockId, // Her bileşen varsayılan olarak kendi bağımsız satırında başlar
       data: JSON.parse(JSON.stringify(compDef.defaultData)),
-      customStyles: {}
+      customStyles: { width: '100%' }
     };
 
     if (atIndex !== null && atIndex >= 0 && atIndex <= this.blocks.length) {
@@ -85,20 +86,60 @@ class NoCodeEngine {
     this.emit('change', this.blocks);
   }
 
-  // Sürükle ve Bırak ile Yeniden Sıralama (Drag Reorder)
-  reorderBlock(sourceId, targetId, placeBefore = true) {
+  // Bileşeni Ayrı Bağımsız Satıra Al
+  separateBlockToNewRow(blockId) {
+    if (this.isReadOnly) return;
+    const block = this.blocks.find(b => b.id === blockId);
+    if (block) {
+      block.rowId = 'row_' + block.id + '_' + Date.now();
+      if (!block.customStyles) block.customStyles = {};
+      block.customStyles.width = '100%';
+      this.emit('change', this.blocks);
+      this.showToast('↩️ Bileşen bağımsız satıra alındı.');
+    }
+  }
+
+  // Sürükle ve Bırak ile Yeniden Sıralama & Yan Yana Yerleştirme
+  reorderBlock(sourceId, targetId, position = 'bottom') {
     if (this.isReadOnly || sourceId === targetId) return;
     const srcIdx = this.blocks.findIndex(b => b.id === sourceId);
-    if (srcIdx === -1) return;
+    const targetIdx = this.blocks.findIndex(b => b.id === targetId);
+    if (srcIdx === -1 || targetIdx === -1) return;
 
-    const [item] = this.blocks.splice(srcIdx, 1);
-    let targetIdx = this.blocks.findIndex(b => b.id === targetId);
-    if (targetIdx === -1) {
-      this.blocks.push(item);
-    } else {
-      if (!placeBefore) targetIdx++;
-      this.blocks.splice(targetIdx, 0, item);
+    const source = this.blocks[srcIdx];
+    const target = this.blocks[targetIdx];
+
+    this.blocks.splice(srcIdx, 1);
+    let newTargetIdx = this.blocks.findIndex(b => b.id === targetId);
+
+    // Yan Yana Yerleştirme (Sağa veya Sola Bırakıldığında)
+    if (position === 'left' || position === 'right') {
+      source.rowId = target.rowId || ('row_' + target.id);
+      target.rowId = source.rowId;
+
+      if (!source.customStyles) source.customStyles = {};
+      if (!target.customStyles) target.customStyles = {};
+
+      source.customStyles.width = 'calc(50% - 8px)';
+      target.customStyles.width = 'calc(50% - 8px)';
+
+      if (position === 'left') {
+        this.blocks.splice(newTargetIdx, 0, source);
+      } else {
+        this.blocks.splice(newTargetIdx + 1, 0, source);
+      }
+      this.showToast('🔗 Bileşenler yan yana yerleştirildi!');
+    } 
+    // Alt Alta Sıralama (Üste veya Alta Bırakıldığında - Bağımsız Satır Kalır)
+    else {
+      source.rowId = 'row_' + source.id + '_' + Date.now();
+      if (position === 'top' || position === true) {
+        this.blocks.splice(newTargetIdx, 0, source);
+      } else {
+        this.blocks.splice(newTargetIdx + 1, 0, source);
+      }
     }
+
     this.selectBlock(sourceId);
     this.emit('change', this.blocks);
   }
@@ -113,6 +154,7 @@ class NoCodeEngine {
     const cloned = {
       id: newBlockId,
       componentId: source.componentId,
+      rowId: 'row_' + newBlockId,
       data: JSON.parse(JSON.stringify(source.data)),
       customStyles: JSON.parse(JSON.stringify(source.customStyles || {}))
     };
@@ -130,7 +172,7 @@ class NoCodeEngine {
     }
     this.selectedBlockId = blockId;
 
-    // DOM üzerindeki .selected sınıflarını tuvali yıkmadan anında ve akıcı güncelle
+    // DOM üzerindeki .selected sınıflarını anında güncelle
     const canvas = document.getElementById('visualCanvas');
     if (canvas) {
       canvas.querySelectorAll('.canvas-block').forEach(b => {
@@ -179,7 +221,7 @@ class NoCodeEngine {
     return pass;
   }
 
-  // Tuval Render
+  // Tuval Render (Satır Tabanlı Bağımsız Yerleşim)
   renderCanvas(containerEl, isPreviewMode = false) {
     containerEl.innerHTML = '';
 
@@ -196,87 +238,129 @@ class NoCodeEngine {
 
     const allowEditing = !isPreviewMode && !this.isReadOnly;
 
-    this.blocks.forEach((block, index) => {
-      const blockWrap = document.createElement('div');
-      blockWrap.className = 'canvas-block' + (block.id === this.selectedBlockId && allowEditing ? ' selected' : '') + (this.isReadOnly ? ' read-only-mode' : '');
-      blockWrap.dataset.blockId = block.id;
-
-      if (block.customStyles && block.customStyles.width) {
-        blockWrap.style.width = block.customStyles.width;
+    // Blokları ardışık rowId'lerine göre satırlar halinde grupla
+    const rows = [];
+    let currentRow = null;
+    this.blocks.forEach(block => {
+      const rId = block.rowId || ('row_' + block.id);
+      block.rowId = rId;
+      if (!currentRow || currentRow.id !== rId) {
+        currentRow = { id: rId, blocks: [block] };
+        rows.push(currentRow);
+      } else {
+        currentRow.blocks.push(block);
       }
-
-      // Hızlı Kontrol Çubuğu & Taşıma Tutamacı
-      if (allowEditing) {
-        const toolbar = document.createElement('div');
-        toolbar.className = 'block-floating-toolbar';
-        toolbar.innerHTML = `
-          <button class="action-mini-btn drag-handle" title="Sürükleyip Sırasını Değiştirin" draggable="true">⋮⋮</button>
-          <button class="action-mini-btn btn-up" title="Yukarı Taşı" ${index === 0 ? 'disabled' : ''}>⬆️</button>
-          <button class="action-mini-btn btn-down" title="Aşağı Taşı" ${index === this.blocks.length - 1 ? 'disabled' : ''}>⬇️</button>
-          <button class="action-mini-btn btn-duplicate" title="Çoğalt">📋</button>
-          <button class="action-mini-btn btn-delete danger" title="Sil">🗑️</button>
-        `;
-
-        toolbar.querySelector('.btn-up').onclick = (e) => { e.stopPropagation(); this.moveBlock(block.id, -1); };
-        toolbar.querySelector('.btn-down').onclick = (e) => { e.stopPropagation(); this.moveBlock(block.id, 1); };
-        toolbar.querySelector('.btn-duplicate').onclick = (e) => { e.stopPropagation(); this.duplicateBlock(block.id); };
-        toolbar.querySelector('.btn-delete').onclick = (e) => { e.stopPropagation(); this.removeBlock(block.id); };
-
-        blockWrap.appendChild(toolbar);
-
-        // Kenar Boyutlandırma Tutamaçları (Resize Handles)
-        const resizeHandleRight = document.createElement('div');
-        resizeHandleRight.className = 'block-resize-handle block-resize-handle-right';
-        resizeHandleRight.title = 'Genişliği Ayarla (Sürükleyin)';
-        blockWrap.appendChild(resizeHandleRight);
-
-        const resizeHandleBottom = document.createElement('div');
-        resizeHandleBottom.className = 'block-resize-handle block-resize-handle-bottom';
-        resizeHandleBottom.title = 'İç Boşluğu Ayarla (Sürükleyin)';
-        blockWrap.appendChild(resizeHandleBottom);
-      }
-
-      // İçerik Alanı
-      const contentEl = document.createElement('div');
-      contentEl.className = 'block-content-area';
-      contentEl.innerHTML = this.generateBlockHtml(block);
-
-      // Inline Metin Düzenleme Olayları
-      if (allowEditing) {
-        contentEl.querySelectorAll('[data-bind]').forEach(editable => {
-          editable.contentEditable = 'true';
-          editable.spellcheck = false;
-          editable.addEventListener('input', () => {
-            const field = editable.dataset.bind;
-            block.data[field] = editable.innerText;
-            
-            if (block.componentId === 'journal-entry-card') {
-              const counter = blockWrap.querySelector('.nc-journal-counter');
-              if (counter) {
-                const words = editable.innerText.trim() ? editable.innerText.trim().split(/\s+/).length : 0;
-                counter.textContent = `💬 ${words} Kelime • ${editable.innerText.length} Karakter`;
-              }
-            }
-            this.emit('select', block);
-          });
-        });
-      }
-
-      blockWrap.appendChild(contentEl);
-
-      // Seçim (Akıcı ve Çakışmasız)
-      if (allowEditing) {
-        blockWrap.addEventListener('mousedown', (e) => {
-          if (!e.target.closest('.action-mini-btn') && !e.target.closest('.block-resize-handle')) {
-            this.selectBlock(block.id);
-          }
-        });
-      }
-
-      containerEl.appendChild(blockWrap);
     });
 
-    // Sayfa içinde boş bir yere tıklandığında seçimi kaldır
+    let globalBlockIndex = 0;
+
+    rows.forEach(row => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'canvas-row';
+      rowEl.dataset.rowId = row.id;
+
+      row.blocks.forEach(block => {
+        const index = globalBlockIndex++;
+        const blockWrap = document.createElement('div');
+        blockWrap.className = 'canvas-block' + (block.id === this.selectedBlockId && allowEditing ? ' selected' : '') + (this.isReadOnly ? ' read-only-mode' : '');
+        blockWrap.dataset.blockId = block.id;
+
+        // Genişlik: Eğer kullanıcı özel boyut verdiyse onu uygula, yoksa satırdaki blok sayısına göre dağıt
+        if (block.customStyles && block.customStyles.width) {
+          blockWrap.style.width = block.customStyles.width;
+        } else if (row.blocks.length > 1) {
+          blockWrap.style.width = `calc(${Math.floor(100 / row.blocks.length)}% - 8px)`;
+        } else {
+          blockWrap.style.width = '100%';
+        }
+
+        // Hızlı Kontrol Çubuğu & Taşıma Tutamacı
+        if (allowEditing) {
+          const toolbar = document.createElement('div');
+          toolbar.className = 'block-floating-toolbar';
+          
+          let separateBtnHtml = '';
+          if (row.blocks.length > 1) {
+            separateBtnHtml = `<button class="action-mini-btn btn-separate" title="Ayrı Bağımsız Satıra Al">↩️ Ayır</button>`;
+          }
+
+          toolbar.innerHTML = `
+            <button class="action-mini-btn drag-handle" title="Taşımak için Sürükleyin (Sağ/Sol: Yan Yana, Üst/Alt: Ayrı Satır)" draggable="true">⋮⋮</button>
+            ${separateBtnHtml}
+            <button class="action-mini-btn btn-up" title="Yukarı Taşı" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+            <button class="action-mini-btn btn-down" title="Aşağı Taşı" ${index === this.blocks.length - 1 ? 'disabled' : ''}>⬇️</button>
+            <button class="action-mini-btn btn-duplicate" title="Çoğalt">📋</button>
+            <button class="action-mini-btn btn-delete danger" title="Sil">🗑️</button>
+          `;
+
+          toolbar.querySelector('.btn-up').onclick = (e) => { e.stopPropagation(); this.moveBlock(block.id, -1); };
+          toolbar.querySelector('.btn-down').onclick = (e) => { e.stopPropagation(); this.moveBlock(block.id, 1); };
+          toolbar.querySelector('.btn-duplicate').onclick = (e) => { e.stopPropagation(); this.duplicateBlock(block.id); };
+          toolbar.querySelector('.btn-delete').onclick = (e) => { e.stopPropagation(); this.removeBlock(block.id); };
+
+          const sepBtn = toolbar.querySelector('.btn-separate');
+          if (sepBtn) {
+            sepBtn.onclick = (e) => { e.stopPropagation(); this.separateBlockToNewRow(block.id); };
+          }
+
+          blockWrap.appendChild(toolbar);
+
+          // Kenar Boyutlandırma Tutamaçları
+          const resizeHandleRight = document.createElement('div');
+          resizeHandleRight.className = 'block-resize-handle block-resize-handle-right';
+          resizeHandleRight.title = 'Genişliği Ayarla (Sürükleyin)';
+          blockWrap.appendChild(resizeHandleRight);
+
+          const resizeHandleBottom = document.createElement('div');
+          resizeHandleBottom.className = 'block-resize-handle block-resize-handle-bottom';
+          resizeHandleBottom.title = 'İç Boşluğu Ayarla (Sürükleyin)';
+          blockWrap.appendChild(resizeHandleBottom);
+        }
+
+        // İçerik Alanı
+        const contentEl = document.createElement('div');
+        contentEl.className = 'block-content-area';
+        contentEl.innerHTML = this.generateBlockHtml(block);
+
+        // Inline Metin Düzenleme
+        if (allowEditing) {
+          contentEl.querySelectorAll('[data-bind]').forEach(editable => {
+            editable.contentEditable = 'true';
+            editable.spellcheck = false;
+            editable.addEventListener('input', () => {
+              const field = editable.dataset.bind;
+              block.data[field] = editable.innerText;
+              
+              if (block.componentId === 'journal-entry-card') {
+                const counter = blockWrap.querySelector('.nc-journal-counter');
+                if (counter) {
+                  const words = editable.innerText.trim() ? editable.innerText.trim().split(/\s+/).length : 0;
+                  counter.textContent = `💬 ${words} Kelime • ${editable.innerText.length} Karakter`;
+                }
+              }
+              this.emit('select', block);
+            });
+          });
+        }
+
+        blockWrap.appendChild(contentEl);
+
+        // Seçim
+        if (allowEditing) {
+          blockWrap.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('.action-mini-btn') && !e.target.closest('.block-resize-handle')) {
+              this.selectBlock(block.id);
+            }
+          });
+        }
+
+        rowEl.appendChild(blockWrap);
+      });
+
+      containerEl.appendChild(rowEl);
+    });
+
+    // Boş alana tıklanınca seçimi kaldır
     if (allowEditing && !this._emptyAreaListenerAdded) {
       this._emptyAreaListenerAdded = true;
       const viewport = document.getElementById('canvasViewport');
@@ -295,9 +379,8 @@ class NoCodeEngine {
     }
   }
 
-  // Sürükle-Bırak Sıralama ve Kenardan Boyutlandırma Olayları
+  // Sürükle-Bırak 4 Yönlü Sıralama ve Kenardan Boyutlandırma Olayları
   attachDragAndResizeListeners(containerEl) {
-    // 1. Sürükle ve Sıralama (Drag and drop reordering)
     const blocks = containerEl.querySelectorAll('.canvas-block');
 
     blocks.forEach(blockEl => {
@@ -312,7 +395,7 @@ class NoCodeEngine {
 
         dragHandle.addEventListener('dragend', () => {
           blockEl.classList.remove('is-dragging');
-          blocks.forEach(b => b.classList.remove('drag-over-top', 'drag-over-bottom'));
+          blocks.forEach(b => b.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right'));
           this.draggedBlockId = null;
         });
       }
@@ -323,27 +406,44 @@ class NoCodeEngine {
         e.dataTransfer.dropEffect = 'move';
 
         const rect = blockEl.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        if (e.clientY < midY) {
+        const relX = (e.clientX - rect.left) / rect.width;
+        const relY = (e.clientY - rect.top) / rect.height;
+
+        blockEl.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right');
+
+        // Sol kenara yakınsa yan yana sol
+        if (relX < 0.25) {
+          blockEl.classList.add('drag-over-left');
+          this._dropPosition = 'left';
+        } 
+        // Sağ kenara yakınsa yan yana sağ
+        else if (relX > 0.75) {
+          blockEl.classList.add('drag-over-right');
+          this._dropPosition = 'right';
+        } 
+        // Üst yarıysa bağımsız üst satır
+        else if (relY < 0.5) {
           blockEl.classList.add('drag-over-top');
-          blockEl.classList.remove('drag-over-bottom');
-        } else {
+          this._dropPosition = 'top';
+        } 
+        // Alt yarıysa bağımsız alt satır
+        else {
           blockEl.classList.add('drag-over-bottom');
-          blockEl.classList.remove('drag-over-top');
+          this._dropPosition = 'bottom';
         }
       });
 
       blockEl.addEventListener('dragleave', () => {
-        blockEl.classList.remove('drag-over-top', 'drag-over-bottom');
+        blockEl.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right');
       });
 
       blockEl.addEventListener('drop', (e) => {
         e.preventDefault();
         if (!this.draggedBlockId || this.draggedBlockId === blockEl.dataset.blockId) return;
 
-        const isTop = blockEl.classList.contains('drag-over-top');
-        blockEl.classList.remove('drag-over-top', 'drag-over-bottom');
-        this.reorderBlock(this.draggedBlockId, blockEl.dataset.blockId, isTop);
+        const pos = this._dropPosition || 'bottom';
+        blockEl.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right');
+        this.reorderBlock(this.draggedBlockId, blockEl.dataset.blockId, pos);
       });
     });
 
